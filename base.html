@@ -1,48 +1,118 @@
 <html>
-<div class="row skeleton"> <!-- Start Skeleton Row-->
-    <div class="span6 "><!-- Start of Question and Submission DIV (column) -->
-        <h1 id="question">
-            <span>The question will be loaded here</span>
-        </h1>
-        <div id="answer"> <!-- Start DIV for the answer submission buttons -->
-            <!-- If the user clicks this button, the saved answer will be value="Default"-->
-            <button class="btn btn-success btn-answer" value='Default'>
-                <i class="icon icon-white icon-thumbs-up"></i>
-                Default
-            </button>
-        </div><!-- End of DIV for the answer submission buttons -->
-        
-        <div id="rating"> <!-- Start DIV for the rating submission buttons -->
-            <!-- If the user clicks this button, the saved answer will be value="Default"-->
-            <button class="btn btn-success btn-answer" value='Default'>
-                <i class="icon icon-white icon-thumbs-up"></i>
-                Default
-            </button>
-        </div><!-- End of DIV for the rating submission buttons -->
-        
-        <!-- Feedback items for the user -->
-        <p><span id="i18n_working_task">You are working now on task:</span> <span id="task-id" class="label label-warning">#</span></p>
-        <p><span id="i18n_tasks_completed">You have completed:</span> <span id="done" class="label label-info"></span> <span id="i18n_tasks_from">tasks from</span>
-        <!-- Progress bar for the user -->
-        <span id="total" class="label label-inverse"></span></p>
-        <div class="progress progress-striped">
-            <div id="progress" rel="tooltip" title="#" class="bar" style="width: 0%;"></div>
+<script id="answerview" type="text/html">
+    <div>
+        <span id="question">The question will be loaded here</span>
+        <div>
+            <textarea name="answertext" value="{{content}}">Enter your answer here!</textarea>
         </div>
-    </div><!-- End of Question and Submission DIV (column) -->
-    
-    <div class="span6"><!-- Start of Photo DIV (column) -->
-        <a id="photo-link" href="#">
-            <img id="photo" src="http://i.imgur.com/GeHxzb7.png" style="max-width=100%">
-        </a>
-    </div><!-- End of Photo DIV (columnt) -->
-</div><!-- End of Skeleton Row -->
+        {{loading}}
 
+        <button on-click="submit">Submit</button>
+        <button on-click="skip">Skip</button>
+    </div>
+</script>
 
+<script id="ratingview" type="text/html">
+    <div>
+        <div id="answers">
 
+            <div>
+                <div>Answer here</div>
+                <div>Rating here</div>
+                <textarea name="feedback">Feedback here</textarea>
+                <div id="constraints">
+                    {{#colors}}
+                    <label>
+                        <input type='checkbox' name='{{selected}}' value='{{.}}' />{{.}}
+                    </label>
+                    {{/}}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</script>
 
 <script>
 
-
 </script>
 
+<h3>Experiment zehn!</h3>
+
+<!--
+     1. This is the element we'll render our Ractive to.
+-->
+<div id='container'></div>
+
+<!--
+     2. You can load a template in many ways. For convenience, we'll include it in
+     a script tag so that we don't need to mess around with AJAX or multiline strings.
+     Note that we've set the type attribute to 'text/ractive' - though it can be
+     just about anything except 'text/javascript'
+-->
+
+
+<!--
+     3. You can always get the most recent stable version from the URL below.
+     If you want the newest features (unstable!), use the 'edge' version instead:
+
+         http://cdn.ractivejs.org/edge/ractive.min.js
+
+     If you need IE8 support, change 'ractive' to 'ractive-legacy'.
+-->
+<script src='http://cdn.ractivejs.org/latest/ractive.min.js'></script>
+<script src="http://code.jquery.com/jquery-2.0.0.js"></script>
+
+<!--
+     4. We've got an element in the DOM, we've created a template, and we've
+     loaded the library - now it's time to build our Hello World app.
+-->
+<script>
+    var
+
+    var ractive = new Ractive({
+        // The `el` option can be a node, an ID, or a CSS selector.
+        el: '#container',
+
+        // We could pass in a string, but for the sake of convenience
+        // we're passing the ID of the <script> tag above.
+        template: '#ratingview',
+
+        // Here, we're passing in some initial data
+        data: {
+            name: 'world',
+            loading: false,
+            colors: ["red", "green", "blue"]
+        }
+    });
+
+
+    var Promise = Ractive.Promise;
+
+    ractive.set('name', "Simon");
+    var ajax = $.ajax();
+
+    ractive.on("skip", function () {
+        ractive.set("loading", true)
+    });
+
+    $.ajax("creative_task.json").done(function (jsonTask) {
+
+    });
+
+    ractive.on('submit', function () {
+        Promise.all([
+            ractive.set('loading', true),
+            $.getJSON('creative_task.json')
+        ]).then(function (results) {
+            var ajaxData = results[0];
+            ractive.set({
+                loading: false,
+                list: ajaxData
+            });
+        });
+    });
+
+
+</script>
 </html>
