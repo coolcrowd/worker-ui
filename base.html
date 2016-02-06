@@ -19,6 +19,7 @@
         <div>
             <textarea name="answer" value="{{content}}" placeholder="Enter your answer here!"></textarea>
         </div>
+        {{#if answerType === "images"}}
         <div class="image-container">
             {{#each pictures}}
             <div class="image"
@@ -26,6 +27,7 @@
             </div>
             {{/each}}
         </div>
+        {{/if}}
         <button on-click="submit">Submit</button>
         <button on-click="skip">Skip</button>
     </div>
@@ -171,16 +173,23 @@
      });
      });*/
 
+    CreativeCrowd = (function (properties) {
+        var hooks;
 
-    CreativeCrowd = function (properties) {
-        var hooks = {
-            taskSubmitted: undefined
-        };
+        var types = loop(["answer", "rating", "calibration", "finished", "email"]);
+        function loop(array) {
+            var index = 0;
+            return {
+                next: function () {
+                    return array[index++ % array.length]
+                }
+            }
+        }
+
 
         function queryNext() {
             // for testing
-            var name = makeIterator(["answer", "rating", "calibration", "finished", "email"]);
-            $.getJSON(properties.workerServiceURL + "/" + name.next().value + ".json", function (data, status) {
+            $.getJSON(properties.workerServiceURL + "/" + types.next() + ".json", function (data, status) {
                 if (status === "success") {
                     viewNext(data);
                 } else {
@@ -212,6 +221,11 @@
                             data: next
                         });
                         break;
+                    case "EMAIL":
+                        ractive = new CalibrationView({
+                            data: next
+                        });
+                        break;
                     default:
                         console.log("Unknown type: " + next["type"])
                 }
@@ -223,21 +237,35 @@
                 });
             }
 
-
-
         }
 
         return {
-            taskSubmitted: function (call) {
-                this.hooks.taskSubmitted = call;
+            onSubmitEmail: function (call) {
+                hooks.email = call;
             },
 
+            onSubmitCalibration: function (call) {
+                hooks.calibration = call
+            },
+
+            onSubmitAnswer: function (call) {
+                hooks.answer = call;
+            },
+
+            onSubmitRating: function (call) {
+                hooks.rating = call;
+            },
+
+            onFinished: function (call) {
+                hooks.finished = call;
+            },
+
+            //starts loading the first "next view"
             load: function () {
-                // for the beginning
                 queryNext();
             }
         }
-    };
+    });
 
     var properties = {
         workerServiceURL: "/WorkerUI/test",
@@ -251,17 +279,5 @@
 
     CreativeCrowd(properties).load();
 
-
-    function makeIterator(array) {
-        var nextIndex = 0;
-
-        return {
-            next: function () {
-                return nextIndex < array.length ?
-                {value: array[nextIndex++], done: false} :
-                {done: true};
-            }
-        }
-    }
 </script>
 </html>
