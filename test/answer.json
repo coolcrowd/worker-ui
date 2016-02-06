@@ -1,0 +1,23 @@
+{
+  "type": "ANSWER",
+  "title": "Mean Tweet",
+  "description": "This is the description of the example-task. It specifies what the worker has to do.",
+  "maxAnswersToGive": 3,
+  "answerType" : "images",
+  "pictures": [
+    {
+      "url": "http://learn.ractivejs.org/gifs/problem.gif",
+      "urlLicense": "http://learn.ractivejs.org/extending-ractive/2/"
+    },
+    {
+      "url": "http://33.media.tumblr.com/993618ac8e6fe213212696eb1f06883d/tumblr_inline_o0rkrhF2O31raprkq_500.gif",
+      "urlLicense": "http://devopsreactions.tumblr.com/"
+    }
+  ],
+  "constraints": [
+    {
+      "id": 5,
+      "name": "The tweet must not be racist."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "type": "RATING",
+  "title": "Come up with a joke!",
+  "description": "Come up with a joke about the following situation....",
+  "answers": [
+    {
+      "id": 12,
+      "answer": "Why did the chicken cross the road? Because."
+    },
+    {
+      "id": 18,
+      "answer": "Knock, knock. Who’s there? Not you."
+    }
+  ],
+  "constraints": [
+    {
+      "id": 55,
+      "name": "the joke must not be racist."
+    }
+  ],
+  "ratingOptions": [
+    {
+      "value": 0,
+      "description": "bad"
+    },
+    {
+      "value": 10,
+      "description": "good"
+    }
+  ]
+}

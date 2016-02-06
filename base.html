@@ -1,44 +1,80 @@
+<!--suppress CssUnknownTarget -->
 <html>
-<script id="answerview" type="text/html">
-    <div>
-        <span id="question">The question will be loaded here</span>
-        <div>
-            <textarea name="answertext" value="{{content}}">Enter your answer here!</textarea>
-        </div>
-        {{loading}}
+<script id="title" type="text/html">
+    <h4>{{title}}</h4>
+    <span>{{description}}</span>
+</script>
 
+<script id="answer-view" type="text/html">
+    <!-- TODO max answers to give -->
+    <div>
+        {{>title}}
+        <div id="answer-constraints">
+            {{#each constraints}}
+            <ul>
+                <li>{{name}}</li>
+            </ul>
+            {{/each}}
+        </div>
+        <div>
+            <textarea name="answer" value="{{content}}" placeholder="Enter your answer here!"></textarea>
+        </div>
+        <div class="image-container">
+            {{#each pictures}}
+            <div class="image"
+                 style="background-image: url({{url}});">
+            </div>
+            {{/each}}
+        </div>
         <button on-click="submit">Submit</button>
         <button on-click="skip">Skip</button>
     </div>
 </script>
 
-<script id="ratingview" type="text/html">
+<script id="rating-view" type="text/html">
     <div>
+        {{>title}}
         <div id="answers">
-
-            <div>
-                <div>Answer here</div>
-                <div>Rating here</div>
-                <textarea name="feedback">Feedback here</textarea>
-                <div id="constraints">
-                    {{#colors}}
+            {{#each answers :num}}
+            <div id="answer{{num}}">
+                <textarea name="feedback" placeholder="Write a feedback! (optional)"></textarea>
+                <div id="rating-options">
+                </div>
+                <div id="rating-constraints">
+                    {{#each constraints}}
                     <label>
-                        <input type='checkbox' name='{{selected}}' value='{{.}}' />{{.}}
+                        <input type='checkbox' name='{{name}}' value='{{id}}'>{{name}}
                     </label>
-                    {{/}}
+                    {{/each}}
                 </div>
             </div>
+            {{/each}}
         </div>
+    </div>
+</script>
 
+<script id="calibration-view" type="text/html">
+    <div>
+        {{>title}}
+        <div id="calibrations">
+            {{#each calibrations :num}}
+            <div id="calibration{{num}}">
+                <span>{{question}}</span>
+                <div id="answer-options">
+                    {{#each answerOptions}}
+                    <label><input type="radio" value={{id}} checked>{{option}}</label>
+                    {{/}}
+                </div>
+
+            </div>
+            {{/each}}
+        </div>
     </div>
 </script>
 
 <script>
 
 </script>
-
-<h3>Experiment zehn!</h3>
-
 <!--
      1. This is the element we'll render our Ractive to.
 -->
@@ -68,51 +104,164 @@
      loaded the library - now it's time to build our Hello World app.
 -->
 <script>
-    var
-
-    var ractive = new Ractive({
+    var AnswerView = Ractive.extend({
         // The `el` option can be a node, an ID, or a CSS selector.
         el: '#container',
+        template: "#answer-view",
 
-        // We could pass in a string, but for the sake of convenience
-        // we're passing the ID of the <script> tag above.
-        template: '#ratingview',
+        oninit: function () {
+            this.on("submit", function () {
+                alert("Submitting!");
+            });
 
-        // Here, we're passing in some initial data
-        data: {
-            name: 'world',
-            loading: false,
-            colors: ["red", "green", "blue"]
+            this.on("skip", function () {
+                this.fire("next");
+            });
+        }
+    });
+
+    var RatingView = Ractive.extend({
+        el: '#container',
+        template: "#answer-view",
+
+        oninit: function () {
+            this.on("submit", function () {
+                alert("Submitting!");
+            });
+
+            this.on("skip", function () {
+                this.fire("next");
+            });
+        }
+    });
+
+    var CalibrationView = Ractive.extend({
+        el: '#container',
+        template: "#answer-view",
+
+        oninit: function () {
+            this.on("submit", function () {
+                this.fire("next");
+            });
         }
     });
 
 
     var Promise = Ractive.Promise;
 
-    ractive.set('name', "Simon");
-    var ajax = $.ajax();
-
-    ractive.on("skip", function () {
-        ractive.set("loading", true)
-    });
-
-    $.ajax("creative_task.json").done(function (jsonTask) {
-
-    });
-
-    ractive.on('submit', function () {
-        Promise.all([
-            ractive.set('loading', true),
-            $.getJSON('creative_task.json')
-        ]).then(function (results) {
-            var ajaxData = results[0];
-            ractive.set({
-                loading: false,
-                list: ajaxData
-            });
-        });
-    });
+    /*    ractive.set('name', "Simon");
+     var ajax = $.ajax();
 
 
+
+     $.ajax("creative_task.json").done(function (jsonTask) {
+
+     });
+
+     ractive.on('submit', function () {
+     Promise.all([
+     ractive.set('loading', true),
+     $.getJSON('creative_task.json')
+     ]).then(function (results) {
+     var ajaxData = results[0];
+     ractive.set({
+     loading: false,
+     list: ajaxData
+     });
+     });
+     });*/
+
+
+    CreativeCrowd = function (properties) {
+        var hooks = {
+            taskSubmitted: undefined
+        };
+
+        function queryNext() {
+            // for testing
+            var name = makeIterator(["answer", "rating", "calibration", "finished", "email"]);
+            $.getJSON(properties.workerServiceURL + "/" + name.next().value + ".json", function (data, status) {
+                if (status === "success") {
+                    viewNext(data);
+                } else {
+                    console.log(status);
+                }
+            })
+        }
+
+        var ractive, currentViewType;
+
+        function viewNext(next) {
+            console.log(JSON.stringify(next, null, 4));
+            if (next["type"] === currentViewType) {
+                ractive.set(next);
+            } else {
+                switch (next["type"]) {
+                    case "ANSWER":
+                        ractive = new AnswerView({
+                            data: next
+                        });
+                        break;
+                    case "RATING":
+                        ractive = new RatingView({
+                            data: next
+                        });
+                        break;
+                    case "CALIBRATION":
+                        ractive = new CalibrationView({
+                            data: next
+                        });
+                        break;
+                    default:
+                        console.log("Unknown type: " + next["type"])
+                }
+
+                currentViewType = next["type"];
+
+                ractive.on("next", function () {
+                    queryNext();
+                });
+            }
+
+
+
+        }
+
+        return {
+            taskSubmitted: function (call) {
+                this.hooks.taskSubmitted = call;
+            },
+
+            load: function () {
+                // for the beginning
+                queryNext();
+            }
+        }
+    };
+
+    var properties = {
+        workerServiceURL: "/WorkerUI/test",
+        platform: "mturk",
+        params: {
+            workerId: 5,
+            assignmentId: 1234
+        },
+        preview: false
+    };
+
+    CreativeCrowd(properties).load();
+
+
+    function makeIterator(array) {
+        var nextIndex = 0;
+
+        return {
+            next: function () {
+                return nextIndex < array.length ?
+                {value: array[nextIndex++], done: false} :
+                {done: true};
+            }
+        }
+    }
 </script>
 </html>

@@ -1,0 +1,20 @@
+{
+  "workerId" : 3,
+  "type": "CALIBRATION",
+  "calibrations": [
+    {
+      "question": "did you attend to an university?",
+      "answerOptions": [
+        {
+          "option" : "yes",
+          "id" : 23
+        },
+        {
+          "option" : "no",
+          "id" : 24
+        }
+      ],
+      "id": 4
+    }
+  ]
+}
