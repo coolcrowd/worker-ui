@@ -15,7 +15,7 @@
             <span>{{question}}</span>
             <div id="answer-options-{{num}}">
                 {{# answerOptions : i}}
-                <label><input type="radio" id="answer-options-{{num}}-{{i}}" name=" {{num}}" value={{id}}>{{option}}</label>
+                <label><input type="radio" id="answer-options-{{num}}-{{i}}" value={{id}}>{{option}}</label>
                 {{/}}
             </div>
         </div>
@@ -111,7 +111,7 @@
     var DefaultView = Ractive.extend({
         el: "#container",
 
-        logForm: function(form) {
+        logForm: function (form) {
             console.log(JSON.stringify(this.get("form")));
         }
     });
@@ -133,13 +133,14 @@
         oninit: function () {
             this.on("submit", function () {
                 this.fire("next");
-                this.getCalibrations()
+                this.getCalibrations();
                 this.logForm();
             });
         },
 
         getCalibrations: function () {
-            this.findAll('input[type="radio"]').map()
+            //TODO
+            this.findAll('input[type="radio"]');
         }
     });
 
@@ -226,13 +227,37 @@
 
 
         function queryNext() {
+            var url = properties.workerServiceURL + types.next() + ".json";
             // for testing
-            $.getJSON(properties.workerServiceURL + "/" + types.next() + ".json", function (data, status) {
-                if (status === "success") {
-                    viewNext(data);
-                } else {
-                    console.log(status);
-                }
+            if (this.test) {
+                $.getJSON(properties.workerServiceURL + types.next() + ".json", function (data, status) {
+                    if (status === "success") {
+                        viewNext(data);
+                    } else {
+                        console.log(status);
+                    }
+                })
+            } else {
+                $.ajax({
+                    method: "GET",
+                    url: url,
+                    accepts: "application/json",
+                    // Work with the response
+                    success: function (response) {
+                        console.log(response); // server response
+                        viewNext(response)
+                    }
+                });
+            }
+        }
+
+        function submit(name, data) {
+            $.ajax({
+                method: "POST",
+                url: properties.workerServiceURL + name,
+                contentType: "application/json",
+                data: properties.params,
+
             })
         }
 
@@ -318,13 +343,15 @@
 
 
     CreativeCrowd.init(properties = {
-        workerServiceURL: "/WorkerUI/test",
+        workerServiceURL: "/WorkerUI/test/",
+        //workerServiceURL: "http://jsonplaceholder.typicode.com/",
         platform: "mturk",
         params: {
             workerId: 5,
             assignmentId: 1234
         },
-        preview: false
+        preview: false,
+        test: true
     });
 
     CreativeCrowd.load();
