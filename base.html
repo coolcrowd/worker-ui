@@ -1,4 +1,5 @@
-<!--suppress CssUnknownTarget -->
+<!--suppress ALL -->
+
 <html>
 
 <script id="email-view" type="text/html">
@@ -10,12 +11,15 @@
 
 <script id="calibration-view" type="text/html">
     <div id="calibrations">
-        {{#each calibrations :num}}
-        <div id="calibration-{{num}}">
+        {{#each calibrations :i}}
+        <div id="calibration-{{i}}">
             <span>{{question}}</span>
-            <div id="answer-options-{{num}}">
-                {{# answerOptions : i}}
-                <label><input type="radio" id="answer-options-{{num}}-{{i}}" value={{id}}>{{option}}</label>
+            <div>
+                {{# answerOptions : j}}
+                <label>
+                    <input on-change="radioChange" type="radio" name="{{value}}-{{i}}" id="{{i}}-{{j}}" value={{id}}>
+                    {{option}}
+                </label>
                 {{/}}
             </div>
         </div>
@@ -33,6 +37,9 @@
     <!-- TODO max answers to give -->
     {{>experiment-header}}
     <div id="answer-constraints">
+        <span>
+            The following constraints must not be violated:
+        </span>
         {{#each constraints}}
         <ul>
             <li>{{name}}</li>
@@ -58,15 +65,27 @@
 <script id="rating-view" type="text/html">
     {{>experiment-header}}
     <div id="answers">
-        {{#each answers :num}}
-        <div id="answer{{num}}">
+        {{#each answers :i}}
+        <div id="answer{{i}}">
             <textarea name="feedback" placeholder="Write a feedback! (optional)"></textarea>
             <div id="rating-options">
+                <span>Please rate!</span>
+                {{#each ratingOptions:j}}
+                <label>
+                    <input on-change="radioChange" type="radio" name="{{value}}-{{i}}" id="{{i}}-{{j}}" value={{id}}>
+                    {{option}}
+                </label>
+                {{/each}}
             </div>
             <div id="rating-constraints">
-                {{#each constraints}}
+                <span>
+                    The answer has the following constraints.
+                    Check all that are violated and do not apply for this answer.
+                </span>
+                {{#each constraints:j}}
                 <label>
-                    <input type='checkbox' name='{{name}}' value='{{id}}'>{{name}}
+                    <input on-change="checkboxChange" type="checkbox" name="{{value}}-{{i}}" id="{{i}}-{{j}}">
+                    {{description}}
                 </label>
                 {{/each}}
             </div>
@@ -112,7 +131,11 @@
         el: "#container",
 
         logForm: function (form) {
-            console.log(JSON.stringify(this.get("form")));
+            console.log(JSON.stringify(this.get("form"), null, 4));
+        },
+
+        setEmptyForm: function () {
+
         }
     });
 
@@ -132,22 +155,34 @@
         template: "#calibration-view",
 
         oninit: function () {
-            this.on("submit", function () {
-                this.getCalibrations();
-                this.logForm();
-                this.fire("submitCalibration", this.get());
-                this.fire("next");
-            });
-        },
+            this.setEmptyForm();
+            this.on({
+                submit: function () {
 
-        getCalibrations: function () {
-            //TODO
-            this.findAll('input[type="radio"]');
+
+                    this.logForm();
+                    this.fire("submitCalibration", this.get());
+                    this.fire("next");
+                },
+
+                radioChange: function () {
+                    var radios = this.findAll('input[type="radio"]:checked').map(function (radio) {
+                        return {
+                            answerOption: radio.value,
+                            // id is something like 0-1, 0-2, 0-3,
+                            // where the first number is the calibrationId and the second the answerOptions.index
+                            calibrationId: radio.id.charAt(0)
+                        };
+                    });
+                    this.set("form", radios);
+                }
+
+
+            });
         }
     });
 
     var AnswerView = DefaultView.extend({
-        // The `el` option can be a node, an ID, or a CSS selector.
         template: "#answer-view",
 
         oninit: function () {
@@ -168,8 +203,7 @@
     });
 
     var RatingView = DefaultView.extend({
-        el: '#container',
-        template: "#answer-view",
+        template: "#rating-view",
 
         oninit: function () {
             this.on({
@@ -181,6 +215,17 @@
 
                 skip: function () {
                     this.fire("next");
+                },
+
+                checkboxChange: function () {
+                    var checks = this.findAll('input[type="checkbox"]:checked').map(function (check) {
+                        return {
+                            // id is something like 0-1, 0-2, 0-3,
+                            // where the first number is the calibrationId and the second the answerOptions.index
+                            ratingId: checks.id.charAt(0)
+                        };
+                    });
+                    this.set("form.constraint", checks);
                 }
             });
         }
@@ -332,22 +377,22 @@
 
         function addHooks() {
             // how can this be done cleaner?
-            if(hooks.any !== undefined) {
+            if (hooks.any !== undefined) {
                 ractive.on("submit", hooks.any);
             }
-            if(hooks.email !== undefined) {
+            if (hooks.email !== undefined) {
                 ractive.on("submitEmail", hooks.email);
             }
-            if(hooks.calibration !== undefined) {
+            if (hooks.calibration !== undefined) {
                 ractive.on("submitCalibration", hooks.calibration);
             }
-            if(hooks.answer !== undefined) {
+            if (hooks.answer !== undefined) {
                 ractive.on("submitAnswer", hooks.answer);
             }
-            if(hooks.rating !== undefined) {
+            if (hooks.rating !== undefined) {
                 ractive.on("submitRating", hooks.rating);
             }
-            if(hooks.finished !== undefined) {
+            if (hooks.finished !== undefined) {
                 ractive.on("submitFinished", hooks.finished);
             }
         }
