@@ -121,8 +121,9 @@
 
         oninit: function () {
             this.on("submit", function () {
-                this.fire("next");
                 this.logForm();
+                this.fire("submitEmail", this.get());
+                this.fire("next");
             });
         }
     });
@@ -132,9 +133,10 @@
 
         oninit: function () {
             this.on("submit", function () {
-                this.fire("next");
                 this.getCalibrations();
                 this.logForm();
+                this.fire("submitCalibration", this.get());
+                this.fire("next");
             });
         },
 
@@ -151,8 +153,11 @@
         oninit: function () {
             this.on({
                 submit: function () {
-                    alert("Submitting!");
                     this.logForm();
+                    //TODO actual submitting
+                    this.fire("submitAnswer", this.get())
+                    this.fire("next");
+
                 },
 
                 skip: function () {
@@ -169,9 +174,9 @@
         oninit: function () {
             this.on({
                 submit: function () {
-                    alert("Submitting!");
                     this.logForm();
-
+                    this.fire("submitRating", this.get());
+                    this.fire("next");
                 },
 
                 skip: function () {
@@ -182,7 +187,13 @@
     });
 
     var FinishedView = DefaultView.extend({
-        template: "#finished-view"
+        template: "#finished-view",
+
+        oninit: function () {
+            this.on("next", function () {
+                this.fire("submitFinished")
+            })
+        }
     });
 
 
@@ -211,7 +222,6 @@
      });*/
 
     CreativeCrowd = (function () {
-        var hooks = {};
         var properties;
 
         var types = loop(["email", "calibration", "answer", "rating", "finished"]);
@@ -238,11 +248,11 @@
                     }
                 })
             } else {
-                var nextUrl = properties.workerServiceURL+'next/'
-                    +properties.platform+'/'
-                    +properties.experiment;
+                var nextUrl = properties.workerServiceURL + 'next/'
+                        + properties.platform + '/'
+                        + properties.experiment;
 
-                $.getJSON(nextUrl, function( data ) {
+                $.getJSON(nextUrl, function (data) {
                     viewNext(data);
                     alert(data);
                 });
@@ -309,6 +319,8 @@
 
                 currentViewType = next["type"];
 
+                addHooks();
+
                 ractive.on("next", function () {
                     queryNext();
                 });
@@ -316,11 +328,39 @@
 
         }
 
+        var hooks = {};
+
+        function addHooks() {
+            // how can this be done cleaner?
+            if(hooks.any !== undefined) {
+                ractive.on("submit", hooks.any);
+            }
+            if(hooks.email !== undefined) {
+                ractive.on("submitEmail", hooks.email);
+            }
+            if(hooks.calibration !== undefined) {
+                ractive.on("submitCalibration", hooks.calibration);
+            }
+            if(hooks.answer !== undefined) {
+                ractive.on("submitAnswer", hooks.answer);
+            }
+            if(hooks.rating !== undefined) {
+                ractive.on("submitRating", hooks.rating);
+            }
+            if(hooks.finished !== undefined) {
+                ractive.on("submitFinished", hooks.finished);
+            }
+        }
+
         return {
             init: function (props) {
                 properties = props;
                 this.currentViewType = "DEFAULT";
                 ractive = new DefaultView();
+            },
+
+            onSubmitAny: function (call) {
+                hooks.any = call;
             },
 
             onSubmitEmail: function (call) {
@@ -364,10 +404,14 @@
 
     CreativeCrowd.load();
     CreativeCrowd.onSubmitAnswer(function (data) {
-        console.log("answer submitted" + JSON.stringify(data))
+        console.log("answer submitted" + JSON.stringify(data));
     });
     CreativeCrowd.onSubmitCalibration(function (data) {
-        console.log("calibration submitted" + JSON.stringify(data))
+        console.log("calibration submitted" + JSON.stringify(data));
     });
+    CreativeCrowd.onSubmitAny(function () {
+        console.log("Something was submitted");
+    })
+
 </script>
 </html>
