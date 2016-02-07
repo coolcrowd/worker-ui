@@ -226,14 +226,14 @@
 
 
         function queryNext() {
-            // for testing
-            $.getJSON(properties.workerServiceURL + "/" + types.next() + ".json", function (data, status) {
-                if (status === "success") {
-                    viewNext(data);
-                } else {
-                    console.log(status);
-                }
-            })
+
+            var nextUrl = properties.workerServiceURL+'/next/'
+                +properties.platform+'/'
+                +properties.experiment
+            $.getJSON(nextUrl, function( data ) {
+                viewNext(data);
+                alert(data);
+            });
         }
 
         var ractive, currentViewType;
@@ -324,6 +324,7 @@
             workerId: 5,
             assignmentId: 1234
         },
+        experiment: 8,
         preview: false
     });
 
