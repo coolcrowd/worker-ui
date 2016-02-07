@@ -1,81 +1,83 @@
 <!--suppress CssUnknownTarget -->
 <html>
-<script id="title" type="text/html">
+
+<script id="email-view" type="text/html">
+    <div id="email">
+        <input placeholder="Enter your email" value="{{form.email}}">
+        <button on-click="submit">Submit</button>
+    </div>
+</script>
+
+<script id="calibration-view" type="text/html">
+    <div id="calibrations">
+        {{#each calibrations :num}}
+        <div id="calibration-{{num}}">
+            <span>{{question}}</span>
+            <div id="answer-options-{{num}}">
+                {{# answerOptions : i}}
+                <label><input type="radio" id="answer-options-{{num}}-{{i}}" name=" {{num}}" value={{id}}>{{option}}</label>
+                {{/}}
+            </div>
+        </div>
+        {{/each}}
+        <button on-click="submit">Submit</button>
+    </div>
+</script>
+
+<script id="experiment-header" type="text/html">
     <h4>{{title}}</h4>
     <span>{{description}}</span>
 </script>
 
 <script id="answer-view" type="text/html">
     <!-- TODO max answers to give -->
-    <div>
-        {{>title}}
-        <div id="answer-constraints">
-            {{#each constraints}}
-            <ul>
-                <li>{{name}}</li>
-            </ul>
-            {{/each}}
-        </div>
-        <div>
-            <textarea name="answer" value="{{content}}" placeholder="Enter your answer here!"></textarea>
-        </div>
-        {{#if answerType === "images"}}
-        <div class="image-container">
-            {{#each pictures}}
-            <div class="image"
-                 style="background-image: url({{url}});">
-            </div>
-            {{/each}}
-        </div>
-        {{/if}}
-        <button on-click="submit">Submit</button>
-        <button on-click="skip">Skip</button>
+    {{>experiment-header}}
+    <div id="answer-constraints">
+        {{#each constraints}}
+        <ul>
+            <li>{{name}}</li>
+        </ul>
+        {{/each}}
     </div>
+    <div>
+        <textarea name="answer" value="{{content}}" placeholder="Enter your answer here!"></textarea>
+    </div>
+    {{#if answerType === "images"}}
+    <div class="image-container">
+        {{#each pictures}}
+        <div class="image"
+             style="background-image: url({{url}});">
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+    <button on-click="submit">Submit</button>
+    <button on-click="skip">Skip</button>
 </script>
 
 <script id="rating-view" type="text/html">
-    <div>
-        {{>title}}
-        <div id="answers">
-            {{#each answers :num}}
-            <div id="answer{{num}}">
-                <textarea name="feedback" placeholder="Write a feedback! (optional)"></textarea>
-                <div id="rating-options">
-                </div>
-                <div id="rating-constraints">
-                    {{#each constraints}}
-                    <label>
-                        <input type='checkbox' name='{{name}}' value='{{id}}'>{{name}}
-                    </label>
-                    {{/each}}
-                </div>
+    {{>experiment-header}}
+    <div id="answers">
+        {{#each answers :num}}
+        <div id="answer{{num}}">
+            <textarea name="feedback" placeholder="Write a feedback! (optional)"></textarea>
+            <div id="rating-options">
             </div>
-            {{/each}}
+            <div id="rating-constraints">
+                {{#each constraints}}
+                <label>
+                    <input type='checkbox' name='{{name}}' value='{{id}}'>{{name}}
+                </label>
+                {{/each}}
+            </div>
         </div>
+        {{/each}}
     </div>
 </script>
 
-<script id="calibration-view" type="text/html">
-    <div>
-        {{>title}}
-        <div id="calibrations">
-            {{#each calibrations :num}}
-            <div id="calibration{{num}}">
-                <span>{{question}}</span>
-                <div id="answer-options">
-                    {{#each answerOptions}}
-                    <label><input type="radio" value={{id}} checked>{{option}}</label>
-                    {{/}}
-                </div>
-
-            </div>
-            {{/each}}
-        </div>
-    </div>
-</script>
-
-<script>
-
+<script id="finished-view" type="text/html">
+    <span>You have finished all tasks. Thank you for participating!</span>
+    <button on-click="next">Next!</button>
 </script>
 <!--
      1. This is the element we'll render our Ractive to.
@@ -106,46 +108,80 @@
      loaded the library - now it's time to build our Hello World app.
 -->
 <script>
-    var AnswerView = Ractive.extend({
+    var DefaultView = Ractive.extend({
+        el: "#container",
+
+        logForm: function(form) {
+            console.log(JSON.stringify(this.get("form")));
+        }
+    });
+
+    var EmailView = DefaultView.extend({
+        template: "#email-view",
+
+        oninit: function () {
+            this.on("submit", function () {
+                this.fire("next");
+                this.logForm();
+            });
+        }
+    });
+
+    var CalibrationView = DefaultView.extend({
+        template: "#calibration-view",
+
+        oninit: function () {
+            this.on("submit", function () {
+                this.fire("next");
+                this.getCalibrations()
+                this.logForm();
+            });
+        },
+
+        getCalibrations: function () {
+            this.findAll('input[type="radio"]').map()
+        }
+    });
+
+    var AnswerView = DefaultView.extend({
         // The `el` option can be a node, an ID, or a CSS selector.
-        el: '#container',
         template: "#answer-view",
 
         oninit: function () {
-            this.on("submit", function () {
-                alert("Submitting!");
-            });
+            this.on({
+                submit: function () {
+                    alert("Submitting!");
+                    this.logForm();
+                },
 
-            this.on("skip", function () {
-                this.fire("next");
+                skip: function () {
+                    this.fire("next");
+                }
             });
         }
     });
 
-    var RatingView = Ractive.extend({
+    var RatingView = DefaultView.extend({
         el: '#container',
         template: "#answer-view",
 
         oninit: function () {
-            this.on("submit", function () {
-                alert("Submitting!");
-            });
+            this.on({
+                submit: function () {
+                    alert("Submitting!");
+                    this.logForm();
 
-            this.on("skip", function () {
-                this.fire("next");
+                },
+
+                skip: function () {
+                    this.fire("next");
+                }
             });
         }
     });
 
-    var CalibrationView = Ractive.extend({
-        el: '#container',
-        template: "#answer-view",
-
-        oninit: function () {
-            this.on("submit", function () {
-                this.fire("next");
-            });
-        }
+    var FinishedView = DefaultView.extend({
+        template: "#finished-view"
     });
 
 
@@ -173,10 +209,12 @@
      });
      });*/
 
-    CreativeCrowd = (function (properties) {
-        var hooks;
+    CreativeCrowd = (function () {
+        var hooks = {};
+        var properties;
 
-        var types = loop(["answer", "rating", "calibration", "finished", "email"]);
+        var types = loop(["email", "calibration", "answer", "rating", "finished"]);
+
         function loop(array) {
             var index = 0;
             return {
@@ -201,11 +239,21 @@
         var ractive, currentViewType;
 
         function viewNext(next) {
-            console.log(JSON.stringify(next, null, 4));
             if (next["type"] === currentViewType) {
                 ractive.set(next);
             } else {
+                ractive.teardown();
                 switch (next["type"]) {
+                    case "EMAIL":
+                        ractive = new EmailView({
+                            data: next
+                        });
+                        break;
+                    case "CALIBRATION":
+                        ractive = new CalibrationView({
+                            data: next
+                        });
+                        break;
                     case "ANSWER":
                         ractive = new AnswerView({
                             data: next
@@ -216,13 +264,8 @@
                             data: next
                         });
                         break;
-                    case "CALIBRATION":
-                        ractive = new CalibrationView({
-                            data: next
-                        });
-                        break;
-                    case "EMAIL":
-                        ractive = new CalibrationView({
+                    case "FINISHED":
+                        ractive = new FinishedView({
                             data: next
                         });
                         break;
@@ -240,6 +283,12 @@
         }
 
         return {
+            init: function (props) {
+                properties = props;
+                this.currentViewType = "DEFAULT";
+                ractive = new DefaultView();
+            },
+
             onSubmitEmail: function (call) {
                 hooks.email = call;
             },
@@ -265,9 +314,10 @@
                 queryNext();
             }
         }
-    });
+    })();
 
-    var properties = {
+
+    CreativeCrowd.init(properties = {
         workerServiceURL: "/WorkerUI/test",
         platform: "mturk",
         params: {
@@ -275,9 +325,14 @@
             assignmentId: 1234
         },
         preview: false
-    };
+    });
 
-    CreativeCrowd(properties).load();
-
+    CreativeCrowd.load();
+    CreativeCrowd.onSubmitAnswer(function (data) {
+        console.log("answer submitted" + JSON.stringify(data))
+    });
+    CreativeCrowd.onSubmitCalibration(function (data) {
+        console.log("calibration submitted" + JSON.stringify(data))
+    });
 </script>
 </html>
