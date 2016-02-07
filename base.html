@@ -227,10 +227,10 @@
 
 
         function queryNext() {
-            var url = properties.workerServiceURL + types.next() + ".json";
+
             // for testing
-            if (this.test) {
-                $.getJSON(properties.workerServiceURL + types.next() + ".json", function (data, status) {
+            if (properties.workerServiceURL === undefined) {
+                $.getJSON("/WorkerUI/test/" + types.next() + ".json", function (data, status) {
                     if (status === "success") {
                         viewNext(data);
                     } else {
@@ -238,16 +238,25 @@
                     }
                 })
             } else {
-                $.ajax({
-                    method: "GET",
-                    url: url,
-                    accepts: "application/json",
-                    // Work with the response
-                    success: function (response) {
-                        console.log(response); // server response
-                        viewNext(response)
-                    }
+                var nextUrl = properties.workerServiceURL+'next/'
+                    +properties.platform+'/'
+                    +properties.experiment;
+
+                $.getJSON(nextUrl, function( data ) {
+                    viewNext(data);
+                    alert(data);
                 });
+
+//                $.ajax({
+//                    method: "GET",
+//                    url: url,
+//                    accepts: "application/json",
+//                    // Work with the response
+//                    success: function (response) {
+//                        console.log(response); // server response
+//                        viewNext(response)
+//                    }
+//                });
             }
         }
 
@@ -256,7 +265,7 @@
                 method: "POST",
                 url: properties.workerServiceURL + name,
                 contentType: "application/json",
-                data: properties.params,
+                data: properties.params
 
             })
         }
@@ -343,15 +352,14 @@
 
 
     CreativeCrowd.init(properties = {
-        workerServiceURL: "/WorkerUI/test/",
-        //workerServiceURL: "http://jsonplaceholder.typicode.com/",
+        //workerServiceURL: "",
         platform: "mturk",
         params: {
             workerId: 5,
             assignmentId: 1234
         },
-        preview: false,
-        test: true
+        experiment: 8,
+        preview: false
     });
 
     CreativeCrowd.load();
