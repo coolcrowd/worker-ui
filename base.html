@@ -4,7 +4,7 @@
 
 <script id="email-view" type="text/html">
     <div id="email">
-        <input placeholder="Enter your email" value="{{form.email}}">
+        <input placeholder="Enter your email" value="{{toSubmit.email}}">
         <button on-click="submit">Submit</button>
     </div>
 </script>
@@ -17,7 +17,7 @@
             <div>
                 {{# answerOptions : j}}
                 <label>
-                    <input on-change="radioChange" type="radio" name="{{value}}-{{i}}" id="{{i}}-{{j}}" value={{id}}>
+                    <input on-change="radioChange" type="radio" name="options-{{i}}" id="{{i}}-{{j}}" value={{id}}>
                     {{option}}
                 </label>
                 {{/}}
@@ -35,45 +35,48 @@
 
 <script id="answer-view" type="text/html">
     <!-- TODO max answers to give -->
-    {{>experiment-header}}
-    <div id="answer-constraints">
+    <div id="answer">
+        {{>experiment-header}}
+        <div id="answer-constraints">
         <span>
             The following constraints must not be violated:
         </span>
-        {{#each constraints}}
-        <ul>
-            <li>{{name}}</li>
-        </ul>
-        {{/each}}
-    </div>
-    <div>
-        <textarea name="answer" value="{{content}}" placeholder="Enter your answer here!"></textarea>
-    </div>
-    {{#if answerType === "images"}}
-    <div class="image-container">
-        {{#each pictures}}
-        <div class="image"
-             style="background-image: url({{url}});">
+            {{#each constraints}}
+            <ul>
+                <li>{{name}}</li>
+            </ul>
+            {{/each}}
         </div>
-        {{/each}}
+        <div>
+            <textarea name="answer" value="{{toSubmit.answer}}" placeholder="Enter your answer here!"></textarea>
+        </div>
+        {{#if answerType === "images"}}
+        <div id="images">
+            {{#each pictures}}
+            <div class="image"
+                 style="background-image: url({{url}});">
+            </div>
+            <label>{{urlLicense}}</label>
+            {{/each}}
+        </div>
+        {{/if}}
+        <button on-click="submit">Submit</button>
+        <button on-click="skip">Skip</button>
     </div>
-    {{/if}}
-    <button on-click="submit">Submit</button>
-    <button on-click="skip">Skip</button>
 </script>
 
 <script id="rating-view" type="text/html">
     {{>experiment-header}}
-    <div id="answers">
+    <div id="ratings">
         {{#each answers :i}}
-        <div id="answer{{i}}">
+        <div id="rating-{{i}}">
             <textarea name="feedback" placeholder="Write a feedback! (optional)"></textarea>
             <div id="rating-options">
                 <span>Please rate!</span>
                 {{#each ratingOptions:j}}
                 <label>
-                    <input on-change="radioChange" type="radio" name="{{value}}-{{i}}" id="{{i}}-{{j}}" value={{id}}>
-                    {{option}}
+                    <input on-change="radioChange" type="radio" name="options-{{i}}" id="{{i}}-{{j}}" value={{id}}>
+                    {{description}}
                 </label>
                 {{/each}}
             </div>
@@ -85,13 +88,15 @@
                 {{#each constraints:j}}
                 <label>
                     <input on-change="checkboxChange" type="checkbox" name="{{value}}-{{i}}" id="{{i}}-{{j}}">
-                    {{description}}
+                    {{name}}
                 </label>
                 {{/each}}
             </div>
         </div>
         {{/each}}
     </div>
+    <button on-click="submit">Submit</button>
+    <button on-click="skip">Skip</button>
 </script>
 
 <script id="finished-view" type="text/html">
@@ -127,132 +132,12 @@
      loaded the library - now it's time to build our Hello World app.
 -->
 <script>
-    var DefaultView = Ractive.extend({
-        el: "#container",
-
-        logForm: function (form) {
-            console.log(JSON.stringify(this.get("form"), null, 4));
-        },
-
-        setEmptyForm: function () {
-
-        }
-    });
-
-    var EmailView = DefaultView.extend({
-        template: "#email-view",
-
-        oninit: function () {
-            this.on("submit", function () {
-                this.logForm();
-                this.fire("submitEmail", this.get());
-                this.fire("next");
-            });
-        }
-    });
-
-    var CalibrationView = DefaultView.extend({
-        template: "#calibration-view",
-
-        oninit: function () {
-            this.setEmptyForm();
-            this.on({
-                submit: function () {
-
-
-                    this.logForm();
-                    this.fire("submitCalibration", this.get());
-                    this.fire("next");
-                },
-
-                radioChange: function () {
-                    var radios = this.findAll('input[type="radio"]:checked').map(function (radio) {
-                        return {
-                            answerOption: radio.value,
-                            // id is something like 0-1, 0-2, 0-3,
-                            // where the first number is the calibrationId and the second the answerOptions.index
-                            calibrationId: radio.id.charAt(0)
-                        };
-                    });
-                    this.set("form", radios);
-                }
-
-
-            });
-        }
-    });
-
-    var AnswerView = DefaultView.extend({
-        template: "#answer-view",
-
-        oninit: function () {
-            this.on({
-                submit: function () {
-                    this.logForm();
-                    //TODO actual submitting
-                    this.fire("submitAnswer", this.get())
-                    this.fire("next");
-
-                },
-
-                skip: function () {
-                    this.fire("next");
-                }
-            });
-        }
-    });
-
-    var RatingView = DefaultView.extend({
-        template: "#rating-view",
-
-        oninit: function () {
-            this.on({
-                submit: function () {
-                    this.logForm();
-                    this.fire("submitRating", this.get());
-                    this.fire("next");
-                },
-
-                skip: function () {
-                    this.fire("next");
-                },
-
-                checkboxChange: function () {
-                    var checks = this.findAll('input[type="checkbox"]:checked').map(function (check) {
-                        return {
-                            // id is something like 0-1, 0-2, 0-3,
-                            // where the first number is the calibrationId and the second the answerOptions.index
-                            ratingId: checks.id.charAt(0)
-                        };
-                    });
-                    this.set("form.constraint", checks);
-                }
-            });
-        }
-    });
-
-    var FinishedView = DefaultView.extend({
-        template: "#finished-view",
-
-        oninit: function () {
-            this.on("next", function () {
-                this.fire("submitFinished")
-            })
-        }
-    });
-
-
     var Promise = Ractive.Promise;
 
     /*    ractive.set('name', "Simon");
      var ajax = $.ajax();
-
-
-
      $.ajax("creative_task.json").done(function (jsonTask) {
-
      });
-
      ractive.on('submit', function () {
      Promise.all([
      ractive.set('loading', true),
@@ -267,7 +152,144 @@
      });*/
 
     CreativeCrowd = (function () {
+        // -------------- Views -------------------
+        var DefaultView = Ractive.extend({
+            el: "#container",
+
+            logToSubmit: function () {
+                console.log(JSON.stringify(this.get("toSubmit"), null, 4));
+            }
+        });
+
+        var EmailView = DefaultView.extend({
+            template: "#email-view",
+
+            oninit: function () {
+                this.on({
+                    submit: function () {
+                        toSubmit = this.get("toSubmit");
+                        Promise.all([
+                            postSubmit("/emails/" + properties.platform, toSubmit),
+                            // TODO loading view
+                            this.set("loading", true)
+                        ]).then(function (results) {
+                            var postResponse = results[0];
+                            if (postResponse.workerId !== undefined) {
+                                workerId = postResponse.workerId;
+                            }
+                            ractive.set("loading", false)
+                        });
+                        this.fire("submitEmail", this.get(), toSubmit);
+                        this.fire("next");
+                    }
+                });
+            }
+        });
+
+        var CalibrationView = DefaultView.extend({
+            template: "#calibration-view",
+
+            oninit: function () {
+                this.on({
+                    submit: function () {
+                        var toSubmit = this.get("toSubmit");
+                        this.submit(toSubmit)
+                        this.logToSubmit();
+                        this.fire("submitCalibration", this.get());
+                        this.fire("next");
+                    },
+
+                    radioChange: function () {
+                        var radios = this.findAll('input[type="radio"]:checked').map(function (radio) {
+                            return {
+                                // id is something like 0-1, 0-2, 0-3,
+                                // where the first number is the calibrationId and the second the answerOptions.index
+                                calibrationId: radio.id.charAt(0),
+                                answerOption: radio.value
+                            };
+                        });
+                        this.set("toSubmit", radios);
+                    }
+                });
+            },
+
+            submit: function (toSubmit) {
+
+                postSubmit("/calibrations/" + properties.workerId)
+            }
+        });
+
+        var AnswerView = DefaultView.extend({
+            template: "#answer-view",
+
+            oninit: function () {
+                this.on({
+                    submit: function () {
+                        toSubmit = {
+                            answer: this.get("toSubmit.answer"),
+                            experiment: properties.experiment
+                        }
+                        postSubmit("/answers/" + properties.workerId, toSubmit);
+
+                        this.fire("submitAnswer", this.get(), toSubmit)
+                        this.fire("next");
+                    },
+
+                    skip: function () {
+                        this.fire("next");
+                    }
+                });
+            },
+        });
+
+        var RatingView = DefaultView.extend({
+            template: "#rating-view",
+
+            oninit: function () {
+                this.on({
+                    submit: function () {
+                        this.logToSubmit();
+                        this.fire("submitRating", this.get());
+                        this.fire("next");
+                    },
+
+                    skip: function () {
+                        this.fire("next");
+                    },
+
+                    checkboxChange: function () {
+                        var checks = this.findAll('input[type="checkbox"]:checked').map(function (check) {
+                            return {
+                                // id is something like 0-1, 0-2, 0-3,
+                                // where the first number is the calibrationId and the second the answerOptions.index
+                                ratingId: checks.id.charAt(0)
+                            };
+                        });
+                        this.set("toSubmit.constraint", checks);
+                    }
+                });
+            },
+
+            submit: function (toSubmit) {
+                parent.postSubmit("/ratings/" + properties.workerId);
+            }
+        });
+
+        var FinishedView = DefaultView.extend({
+            template: "#finished-view",
+
+            oninit: function () {
+                this.on("next", function () {
+                    this.fire("submitFinished")
+                })
+            }
+        });
+
+        // -------------- Controller -------------------
         var properties;
+        var workerId = undefined;
+        var skipAnswer = false;
+        var skipRating = false;
 
         var types = loop(["email", "calibration", "answer", "rating", "finished"]);
 
@@ -280,9 +302,7 @@
             }
         }
 
-
         function queryNext() {
-
             // for testing
             if (properties.workerServiceURL === undefined) {
                 $.getJSON("/WorkerUI/test/" + types.next() + ".json", function (data, status) {
@@ -296,6 +316,13 @@
                 var nextUrl = properties.workerServiceURL + 'next/'
                         + properties.platform + '/'
                         + properties.experiment;
+
+                var nextParams = {
+                    worker: workerId !== undefined ? workerId : "",
+                    answer: skipAnswer ? "skip" : undefined,
+                    rating: skipRating ? "skip" : ""
+                }
+
 
                 $.getJSON(nextUrl, function (data) {
                     viewNext(data);
@@ -315,14 +342,15 @@
             }
         }
 
-        function submit(name, data) {
-            $.ajax({
+        function postSubmit(endpoint, data) {
+            var url = properties.workerServiceURL + endpoint;
+            console.log("POST: " + url + "\n" + JSON.stringify(data, null, 4));
+            return $.ajax({
                 method: "POST",
-                url: properties.workerServiceURL + name,
+                url: url,
                 contentType: "application/json",
-                data: properties.params
-
-            })
+                data: data
+            });
         }
 
         var ractive, currentViewType;
@@ -366,8 +394,9 @@
 
                 addHooks();
 
-                ractive.on("next", function () {
-                    queryNext();
+                ractive.on({
+                    next: queryNext,
+                    post: postSubmit
                 });
             }
 
@@ -416,6 +445,10 @@
                 hooks.calibration = call
             },
 
+            /**
+             *
+             * @param function call gets called with arguments viewData, submittedData
+             */
             onSubmitAnswer: function (call) {
                 hooks.answer = call;
             },
@@ -438,24 +471,28 @@
 
     CreativeCrowd.init(properties = {
         //workerServiceURL: "",
-        platform: "mturk",
-        params: {
+        // those params will be passed to the crowdplatform implementaion in the object service
+        osParams: {
             workerId: 5,
-            assignmentId: 1234
+            assignmentId: 1234,
         },
+        // this needs to be set either way no matter what osParams are set.
+        platform: "mturk",
+        workerId: 5,
         experiment: 8,
         preview: false
     });
 
     CreativeCrowd.load();
-    CreativeCrowd.onSubmitAnswer(function (data) {
-        console.log("answer submitted" + JSON.stringify(data));
+    CreativeCrowd.onSubmitAnswer(function (viewData, submittedData) {
+        console.log("viewData: \n" + JSON.stringify(viewData, null, 4));
+        console.log("submittedData: \n" + JSON.stringify(submittedData, null, 4));
     });
     CreativeCrowd.onSubmitCalibration(function (data) {
-        console.log("calibration submitted" + JSON.stringify(data));
+        //console.log("calibration submitted" + JSON.stringify(data));
     });
     CreativeCrowd.onSubmitAny(function () {
-        console.log("Something was submitted");
+        //console.log("Something was submitted");
     })
 
 </script>
