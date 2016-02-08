@@ -203,25 +203,18 @@ CreativeCrowd = (function () {
     function postSubmit(route, data) {
         console.log("POST: " + route + "\n" + JSON.stringify(data, null, 4));
         return new Promise(function (fulfil, reject) {
-            // TODO is this bug free?
-            var result = [];
-            for (var key in data) {
-                if (data.hasOwnProperty(key)) {
-                    $.ajax({
-                        method: "POST",
-                        url: route,
-                        contentType: "application/json",
-                        data: JSON.stringify(data[key]),
+            $.ajax({
+                method: "POST",
+                url: route,
+                contentType: "application/json",
+                data: JSON.stringify(data),
 
-                        success: function (response) {
-                            result.push(response);
-                        },
+                success: function (response) {
+                    fulfil(response);
+                },
 
-                        fail: reject(status)
-                    });
-                }
-                fulfil(result);
-            }
+                fail: reject(status)
+            });
         })
     }
 
