@@ -101,7 +101,7 @@ CreativeCrowd = (function () {
             this.on({
                 submit: function () {
                     this.logToSubmit();
-                    this.fire("submitRating", this.get());
+                    this.fire("submitRating", this.get(), toSubmit);
                     this.fire("next");
                 },
 
@@ -166,7 +166,7 @@ CreativeCrowd = (function () {
             $.getJSON(properties.workerServiceURL + types.next() + ".json", function (data, status) {
                 if (status === "success") {
                     if (data.workerId !== undefined) {
-                        worker = data.worker;
+                        worker = data.workerId;
                     }
                     viewNext(data);
                 } else {
@@ -192,6 +192,9 @@ CreativeCrowd = (function () {
 
             $.getJSON(nextUrl, nextParams, function (data, status) {
                 if (status === "success") {
+                    if (data.workerId !== undefined) {
+                        this.worker = data.worker;
+                    }
                     viewNext(data);
                 } else {
                     alert(data);
@@ -271,8 +274,8 @@ CreativeCrowd = (function () {
     }
 
     function viewPreview() {
-        $.getJSON(properties.workerServiceURL + "preview" + properties.experiment, function (preview) {
-            viewNext(preview)
+        $.getJSON(routes.preview + properties.experiment, function (preview) {
+            viewNext(preview);
         })
 
     }
@@ -311,7 +314,8 @@ CreativeCrowd = (function () {
         email: "email/",
         calibration: "calibration/",
         answer: "answer/",
-        rating: "rating/"
+        rating: "rating/",
+        preview: "preview/"
     };
 
     function makeRoutes() {
