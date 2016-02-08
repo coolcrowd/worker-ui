@@ -22,7 +22,7 @@ CreativeCrowd = (function () {
                     toSubmit = this.get("toSubmit");
                     Promise.all([
                         postSubmit("/emails/" + properties.platform, toSubmit),
-                        // TODO loading view
+                        // TODO a loading view
                         this.set("loading", true)
                     ]).then(function (results) {
                         var postResponse = results[0];
@@ -165,14 +165,20 @@ CreativeCrowd = (function () {
                 + properties.platform + '/'
                 + properties.experiment;
 
-            var nextParams = {
-                worker: workerId !== undefined ? workerId : "",
-                answer: skipAnswer ? "skip" : undefined,
-                rating: skipRating ? "skip" : ""
-            };
 
-            $.getJSON(nextUrl, function (data) {
-                viewNext(data);
+
+            var nextParams = properties.osParams;
+            nextParams.worker = workerId !== undefined ? workerId : "";
+            nextParams.answer = skipAnswer ? "skip" : undefined;
+            nextParams.rating = skipRating ? "skip" : "";
+
+
+            $.getJSON(nextUrl, nextParams, function (data, status) {
+                if (status === "success") {
+                    viewNext(data);
+                } else {
+                    alert(data);
+                }
             });
 
 //                $.ajax({
@@ -286,6 +292,11 @@ CreativeCrowd = (function () {
     var preview = false;
 
     return {
+        /**
+         * Reserved words for osParams:
+         * worker, answer, rating
+         * @param props
+         */
         init: function (props) {
             properties = props;
             this.currentViewType = "DEFAULT";
