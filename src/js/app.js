@@ -47,7 +47,8 @@ CreativeCrowd = (function () {
             this.on({
                 submit: function () {
                     var toSubmit = this.get("toSubmit");
-                    this.submit(toSubmit);
+                    toSubmit.experiment = properties.experiment;
+                    postSubmit(routes.calibration + worker, toSubmit);
                     this.fire("submitCalibration", this.get(), toSubmit);
                     this.fire("next");
                 },
@@ -60,12 +61,6 @@ CreativeCrowd = (function () {
                     });
                     this.set("toSubmit", radios);
                 }
-            });
-        },
-
-        submit: function (toSubmit) {
-            toSubmit.forEach(function (value) {
-                postSubmit(routes.calibration + worker, value);
             });
         }
     });
@@ -83,7 +78,7 @@ CreativeCrowd = (function () {
                     };
                     postSubmit(routes.answer + worker, toSubmit);
 
-                    this.fire("submitAnswer", this.get(), toSubmit)
+                    this.fire("submitAnswer", this.get(), toSubmit);
                     this.fire("next");
                 },
 
@@ -100,7 +95,6 @@ CreativeCrowd = (function () {
         oninit: function () {
             this.on({
                 submit: function () {
-                    this.logToSubmit();
                     this.fire("submitRating", this.get(), toSubmit);
                     this.fire("next");
                 },
@@ -208,12 +202,27 @@ CreativeCrowd = (function () {
 
     function postSubmit(route, data) {
         console.log("POST: " + route + "\n" + JSON.stringify(data, null, 4));
-        return $.ajax({
-            method: "POST",
-            url: route,
-            contentType: "application/json",
-            data: JSON.stringify(data)
-        });
+        return new Promise(function (fulfil, reject) {
+            // TODO is this bug free?
+            var result = [];
+            for (var key in data) {
+                if (data.hasOwnProperty(key)) {
+                    $.ajax({
+                        method: "POST",
+                        url: route,
+                        contentType: "application/json",
+                        data: JSON.stringify(data[key]),
+
+                        success: function (response) {
+                            result.push(response);
+                        },
+
+                        fail: reject(status)
+                    });
+                }
+                fulfil(result);
+            }
+        })
     }
 
     var ractive, currentViewType;
@@ -265,11 +274,11 @@ CreativeCrowd = (function () {
 
     }
 
+    // TODO make isolated
     function viewPreview() {
         $.getJSON(routes.preview + properties.experiment, function (preview) {
             viewNext(preview);
         })
-
     }
 
     var hooks = {};
@@ -362,7 +371,8 @@ CreativeCrowd = (function () {
 
         //starts loading the first "next view"
         load: function () {
-            preview === true ? viewPreview() : queryNext();
+            properties.preview === true ? viewPreview() : queryNext();
         }
     }
-})();
+})
+();
