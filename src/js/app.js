@@ -10,6 +10,10 @@ CreativeCrowd = (function () {
 
         logToSubmit: function () {
             console.log(JSON.stringify(this.get("toSubmit"), null, 4));
+        },
+
+        partials: {
+            experimentHeader: require("../templates/experimentHeaderPartial.html")
         }
     });
 
@@ -78,7 +82,7 @@ CreativeCrowd = (function () {
                     var toSubmit = {
                         answer: this.get("toSubmit.answer"),
                         experiment: properties.experiment
-                    }
+                    };
                     postSubmit("/answers/" + properties.workerId, toSubmit);
 
                     this.fire("submitAnswer", this.get(), toSubmit)
@@ -115,15 +119,23 @@ CreativeCrowd = (function () {
                             ratingId: checks.id.charAt(0)
                         };
                     });
-                    this.set("toSubmit.constraint", checks);
-                }
+                    this.set("toSubmit.constraints", checks);
+                },
 
                 //TODO radio submit
+                radioChange: function () {
+                    var radios = this.findAll('input[type="radio"]:checked').map(function (radio) {
+                        return {
+                            answerOption: radio.value
+                        };
+                    });
+                    this.set("toSubmit", radios);
+                }
             });
         },
 
         submit: function (toSubmit) {
-            parent.postSubmit("/ratings/" + properties.workerId);
+            parent.postSubmit("/ratings/" + properties.workerId, toSubmit);
         }
     });
 
@@ -169,8 +181,12 @@ CreativeCrowd = (function () {
 
             var nextParams = properties.osParams;
             nextParams.worker = workerId !== undefined ? workerId : "";
-            nextParams.answer = skipAnswer ? "skip" : undefined;
-            nextParams.rating = skipRating ? "skip" : "";
+            if (skipAnswer) {
+                nextParams.answer = "skip";
+            }
+            if (skipRating) {
+                nextParams.rating = "skip";
+            }
 
 
             $.getJSON(nextUrl, nextParams, function (data, status) {

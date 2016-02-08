@@ -9,7 +9,7 @@
 
 <body>
 <div id="ractive-container"></div>
-<script src="https://worker.pse.kelunik.com/ui/bundle.js"></script>
+<script src="bundle.js"></script>
 </body>
 
 <script>
@@ -18,14 +18,14 @@
         // those params will be passed to the crowdplatform implementaion in the object service
         osParams: {
             workerId: 5,
-            assignmentId: 1234,
+            assignmentId: 1234
         },
         // this needs to be set either way no matter what osParams are set.
         platform: "mturk",
         workerId: 5,
         experiment: 8,
         preview: false,
-        test: true
+        test: false
     });
 
     CreativeCrowd.load();
