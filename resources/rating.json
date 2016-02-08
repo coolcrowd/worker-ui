@@ -16,12 +16,20 @@
     {
       "id": 55,
       "name": "the joke must not be racist."
+    },
+    {
+      "id": 15,
+      "name":"the joke is a lie."
     }
   ],
   "ratingOptions": [
     {
       "value": 0,
       "description": "bad"
+    },
+    {
+      "value": 5,
+      "description": "medium"
     },
     {
       "value": 10,

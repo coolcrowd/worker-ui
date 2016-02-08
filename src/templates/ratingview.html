@@ -13,10 +13,10 @@
             {{/each}}
         </div>
         <div id="rating-constraints">
-                <span>
-                    The answer has the following constraints.
-                    Check all that are violated and do not apply for this answer.
-                </span>
+            <span>
+                The answer has the following constraints.
+                Check all that are violated and do not apply for this answer.
+            </span><br>
             {{#each constraints:j}}
             <label>
                 <input on-change="checkboxChange" type="checkbox" name="{{value}}-{{i}}" id="{{i}}-{{j}}">

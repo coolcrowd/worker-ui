@@ -45,18 +45,14 @@ CreativeCrowd = (function () {
             this.on({
                 submit: function () {
                     var toSubmit = this.get("toSubmit");
-                    this.submit(toSubmit)
-                    this.logToSubmit();
-                    this.fire("submitCalibration", this.get());
+                    this.submit(toSubmit);
+                    this.fire("submitCalibration", this.get(), toSubmit);
                     this.fire("next");
                 },
 
                 radioChange: function () {
                     var radios = this.findAll('input[type="radio"]:checked').map(function (radio) {
                         return {
-                            // id is something like 0-1, 0-2, 0-3,
-                            // where the first number is the calibrationId and the second the answerOptions.index
-                            calibrationId: radio.id.charAt(0),
                             answerOption: radio.value
                         };
                     });
@@ -66,8 +62,9 @@ CreativeCrowd = (function () {
         },
 
         submit: function (toSubmit) {
-
-            postSubmit("/calibrations/" + properties.workerId)
+            toSubmit.forEach(function (value) {
+                postSubmit("/calibrations/" + properties.workerId, value);
+            });
         }
     });
 
@@ -78,7 +75,7 @@ CreativeCrowd = (function () {
         oninit: function () {
             this.on({
                 submit: function () {
-                    toSubmit = {
+                    var toSubmit = {
                         answer: this.get("toSubmit.answer"),
                         experiment: properties.experiment
                     }
@@ -120,6 +117,8 @@ CreativeCrowd = (function () {
                     });
                     this.set("toSubmit.constraint", checks);
                 }
+
+                //TODO radio submit
             });
         },
 
@@ -139,10 +138,6 @@ CreativeCrowd = (function () {
     });
 
     // -------------- Controller -------------------
-    var properties;
-    var workerId = undefined;
-    var skipAnswer = false;
-    var skipRating = false;
 
     var types = loop(["email", "calibration", "answer", "rating", "finished"]);
 
@@ -157,8 +152,8 @@ CreativeCrowd = (function () {
 
     function queryNext() {
         // for testing
-        if (properties.workerServiceURL === undefined) {
-            $.getJSON("/WorkerUI/test/" + types.next() + ".json", function (data, status) {
+        if (properties.test === true) {
+            $.getJSON("/WorkerUI/resources/" + types.next() + ".json", function (data, status) {
                 if (status === "success") {
                     viewNext(data);
                 } else {
@@ -253,6 +248,13 @@ CreativeCrowd = (function () {
 
     }
 
+    function viewPreview() {
+        $.getJSON(properties.workerServiceURL + "preview" + properties.experiment, function (preview) {
+            viewNext(preview)
+        })
+
+    }
+
     var hooks = {};
 
     function addHooks() {
@@ -277,6 +279,12 @@ CreativeCrowd = (function () {
         }
     }
 
+    var properties;
+    var workerId = undefined;
+    var skipAnswer = false;
+    var skipRating = false;
+    var preview = false;
+
     return {
         init: function (props) {
             properties = props;
@@ -298,7 +306,7 @@ CreativeCrowd = (function () {
 
         /**
          *
-         * @param function call gets called with arguments viewData, submittedData
+         * @param call the function call that gets called with arguments viewData, submittedData
          */
         onSubmitAnswer: function (call) {
             hooks.answer = call;
@@ -314,7 +322,7 @@ CreativeCrowd = (function () {
 
         //starts loading the first "next view"
         load: function () {
-            queryNext();
+            preview === true ? viewPreview() : queryNext();
         }
     }
 })();
