@@ -30,9 +30,7 @@ CreativeCrowd = (function () {
                         this.set("loading", true)
                     ]).then(function (results) {
                         var postResponse = results[0];
-                        if (postResponse.workerId !== undefined) {
-                            workerId = postResponse.workerId;
-                        }
+                        // TODO what?
                         ractive.set("loading", false)
                     });
                     this.fire("submitEmail", this.get(), toSubmit);
@@ -67,7 +65,7 @@ CreativeCrowd = (function () {
 
         submit: function (toSubmit) {
             toSubmit.forEach(function (value) {
-                postSubmit(routes.calibration + properties.workerId, value);
+                postSubmit(routes.calibration + worker, value);
             });
         }
     });
@@ -83,7 +81,7 @@ CreativeCrowd = (function () {
                         answer: this.get("toSubmit.answer"),
                         experiment: properties.experiment
                     };
-                    postSubmit(routes.answer + properties.workerId, toSubmit);
+                    postSubmit(routes.answer + worker, toSubmit);
 
                     this.fire("submitAnswer", this.get(), toSubmit)
                     this.fire("next");
@@ -135,7 +133,7 @@ CreativeCrowd = (function () {
         },
 
         submit: function (toSubmit) {
-            parent.postSubmit(routes.rating + properties.workerId, toSubmit);
+            parent.postSubmit(routes.rating + worker, toSubmit);
         }
     });
 
@@ -165,8 +163,11 @@ CreativeCrowd = (function () {
     function queryNext() {
         // for testing
         if (properties.test === true) {
-            $.getJSON("/WorkerUI/resources/" + types.next() + ".json", function (data, status) {
+            $.getJSON(properties.workerServiceURL + types.next() + ".json", function (data, status) {
                 if (status === "success") {
+                    if (data.workerId !== undefined) {
+                        worker = data.worker;
+                    }
                     viewNext(data);
                 } else {
                     console.log(status);
@@ -178,8 +179,8 @@ CreativeCrowd = (function () {
                 + properties.experiment;
 
             var nextParams = properties.osParams;
-            if (workerId !== undefined) {
-                nextParams.worker = workerId;
+            if (worker !== NOWORKER) {
+                nextParams.worker = worker;
             }
             if (skipAnswer) {
                 nextParams.answer = "skip";
@@ -300,8 +301,9 @@ CreativeCrowd = (function () {
         }
     }
 
+    const NOWORKER = "no_worker_set";
     var properties;
-    var workerId = undefined;
+    var worker = NOWORKER;
     var skipAnswer = false;
     var skipRating = false;
     var preview = false;
@@ -326,6 +328,9 @@ CreativeCrowd = (function () {
          */
         init: function (props) {
             properties = props;
+            if (properties.test) {
+                properties.workerServiceURL = "/WorkerUI/resources/"
+            }
             makeRoutes();
             this.currentViewType = "DEFAULT";
             ractive = new DefaultView();
