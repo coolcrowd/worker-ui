@@ -303,10 +303,10 @@ CreativeCrowd = (function () {
     var skipRating = false;
     var preview = false;
     var routes = {
-        email: "email/",
-        calibration: "calibration/",
-        answer: "answer/",
-        rating: "rating/",
+        email: "emails/",
+        calibration: "calibrations/",
+        answer: "answers/",
+        rating: "ratings/",
         preview: "preview/"
     };
 
