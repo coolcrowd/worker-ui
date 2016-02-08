@@ -25,7 +25,7 @@ CreativeCrowd = (function () {
                 submit: function () {
                     toSubmit = this.get("toSubmit");
                     Promise.all([
-                        postSubmit("/emails/" + properties.platform, toSubmit),
+                        postSubmit(routes.email + properties.platform, toSubmit),
                         // TODO a loading view
                         this.set("loading", true)
                     ]).then(function (results) {
@@ -67,7 +67,7 @@ CreativeCrowd = (function () {
 
         submit: function (toSubmit) {
             toSubmit.forEach(function (value) {
-                postSubmit("/calibrations/" + properties.workerId, value);
+                postSubmit(routes.calibration + properties.workerId, value);
             });
         }
     });
@@ -83,7 +83,7 @@ CreativeCrowd = (function () {
                         answer: this.get("toSubmit.answer"),
                         experiment: properties.experiment
                     };
-                    postSubmit("/answers/" + properties.workerId, toSubmit);
+                    postSubmit(routes.answer + properties.workerId, toSubmit);
 
                     this.fire("submitAnswer", this.get(), toSubmit)
                     this.fire("next");
@@ -135,7 +135,7 @@ CreativeCrowd = (function () {
         },
 
         submit: function (toSubmit) {
-            parent.postSubmit("/ratings/" + properties.workerId, toSubmit);
+            parent.postSubmit(routes.rating + properties.workerId, toSubmit);
         }
     });
 
@@ -177,10 +177,10 @@ CreativeCrowd = (function () {
                 + properties.platform + '/'
                 + properties.experiment;
 
-
-
             var nextParams = properties.osParams;
-            nextParams.worker = workerId !== undefined ? workerId : "";
+            if (workerId !== undefined) {
+                nextParams.worker = workerId;
+            }
             if (skipAnswer) {
                 nextParams.answer = "skip";
             }
@@ -210,12 +210,11 @@ CreativeCrowd = (function () {
         }
     }
 
-    function postSubmit(endpoint, data) {
-        var url = properties.workerServiceURL + endpoint;
-        console.log("POST: " + url + "\n" + JSON.stringify(data, null, 4));
+    function postSubmit(route, data) {
+        console.log("POST: " + route + "\n" + JSON.stringify(data, null, 4));
         return $.ajax({
             method: "POST",
-            url: url,
+            url: route,
             contentType: "application/json",
             data: JSON.stringify(data)
         });
@@ -306,6 +305,18 @@ CreativeCrowd = (function () {
     var skipAnswer = false;
     var skipRating = false;
     var preview = false;
+    var routes = {
+        email: "email/",
+        calibration: "calibration/",
+        answer: "answer/",
+        rating: "rating/"
+    };
+
+    function makeRoutes() {
+        for( var key in routes) {
+            routes[key] = properties.workerServiceURL + routes[key];
+        }
+    }
 
     return {
         /**
@@ -315,6 +326,7 @@ CreativeCrowd = (function () {
          */
         init: function (props) {
             properties = props;
+            makeRoutes();
             this.currentViewType = "DEFAULT";
             ractive = new DefaultView();
         },
