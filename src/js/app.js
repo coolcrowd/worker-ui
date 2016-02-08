@@ -162,19 +162,11 @@ CreativeCrowd = (function () {
 
     function queryNext() {
         // for testing
+        var nextUrl;
         if (properties.test === true) {
-            $.getJSON(properties.workerServiceURL + types.next() + ".json", function (data, status) {
-                if (status === "success") {
-                    if (data.workerId !== undefined) {
-                        worker = data.workerId;
-                    }
-                    viewNext(data);
-                } else {
-                    console.log(status);
-                }
-            })
+            nextUrl = properties.workerServiceURL + types.next() + ".json";
         } else {
-            var nextUrl = properties.workerServiceURL + 'next/'
+            nextUrl = properties.workerServiceURL + 'next/'
                 + properties.platform + '/'
                 + properties.experiment;
 
@@ -188,18 +180,18 @@ CreativeCrowd = (function () {
             if (skipRating) {
                 nextParams.rating = "skip";
             }
+        }
 
-
-            $.getJSON(nextUrl, nextParams, function (data, status) {
-                if (status === "success") {
-                    if (data.workerId !== undefined) {
-                        this.worker = data.worker;
-                    }
-                    viewNext(data);
-                } else {
-                    alert(data);
+        $.getJSON(nextUrl, nextParams, function (data, status) {
+            if (status === "success") {
+                if (data.workerId !== undefined) {
+                    worker = data.workerId;
                 }
-            });
+                viewNext(data);
+            } else {
+                alert(status);
+            }
+        });
 
 //                $.ajax({
 //                    method: "GET",
@@ -211,7 +203,7 @@ CreativeCrowd = (function () {
 //                        viewNext(response)
 //                    }
 //                });
-        }
+
     }
 
     function postSubmit(route, data) {
@@ -319,7 +311,7 @@ CreativeCrowd = (function () {
     };
 
     function makeRoutes() {
-        for( var key in routes) {
+        for (var key in routes) {
             routes[key] = properties.workerServiceURL + routes[key];
         }
     }
