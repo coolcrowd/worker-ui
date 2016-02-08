@@ -1,0 +1,29 @@
+<!-- TODO max answers to give -->
+<div id="answer">
+    {{>experiment-header}}
+    <div id="answer-constraints">
+        <span>
+            The following constraints must not be violated:
+        </span>
+        {{#each constraints}}
+        <ul>
+            <li>{{name}}</li>
+        </ul>
+        {{/each}}
+    </div>
+    <div>
+        <textarea name="answer" value="{{toSubmit.answer}}" placeholder="Enter your answer here!"></textarea>
+    </div>
+    {{#if answerType === "images"}}
+    <div id="images">
+        {{#each pictures}}
+        <div class="image"
+             style="background-image: url({{url}});">
+        </div>
+        <label>{{urlLicense}}</label>
+        {{/each}}
+    </div>
+    {{/if}}
+    <button on-click="submit">Submit</button>
+    <button on-click="skip">Skip</button>
+</div>

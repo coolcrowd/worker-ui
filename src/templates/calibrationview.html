@@ -1,0 +1,16 @@
+<div id="calibrations">
+    {{#each calibrations :i}}
+    <div id="calibration-{{i}}">
+        <span>{{question}}</span>
+        <div>
+            {{# answerOptions : j}}
+            <label>
+                <input on-change="radioChange" type="radio" name="options-{{i}}" id="{{i}}-{{j}}" value={{id}}>
+                {{option}}
+            </label>
+            {{/}}
+        </div>
+    </div>
+    {{/each}}
+    <button on-click="submit">Submit</button>
+</div>

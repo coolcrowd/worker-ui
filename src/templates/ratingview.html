@@ -1,0 +1,31 @@
+{{>experiment-header}}
+<div id="ratings">
+    {{#each answers :i}}
+    <div id="rating-{{i}}">
+        <textarea name="feedback" placeholder="Write a feedback! (optional)"></textarea>
+        <div id="rating-options">
+            <span>Please rate!</span>
+            {{#each ratingOptions:j}}
+            <label>
+                <input on-change="radioChange" type="radio" name="options-{{i}}" id="{{i}}-{{j}}" value={{id}}>
+                {{description}}
+            </label>
+            {{/each}}
+        </div>
+        <div id="rating-constraints">
+                <span>
+                    The answer has the following constraints.
+                    Check all that are violated and do not apply for this answer.
+                </span>
+            {{#each constraints:j}}
+            <label>
+                <input on-change="checkboxChange" type="checkbox" name="{{value}}-{{i}}" id="{{i}}-{{j}}">
+                {{name}}
+            </label>
+            {{/each}}
+        </div>
+    </div>
+    {{/each}}
+</div>
+<button on-click="submit">Submit</button>
+<button on-click="skip">Skip</button>
