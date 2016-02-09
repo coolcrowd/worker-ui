@@ -1,8 +1,6 @@
 var Ractive = require("ractive");
 var $ = require("jquery");
 
-var template = require("../templates/maintemplate.html");
-
 CreativeCrowd = (function () {
     // -------------- Views -------------------
     var DefaultView = Ractive.extend({
@@ -153,7 +151,7 @@ CreativeCrowd = (function () {
         }
     }
 
-    function queryNext() {
+    function getNext() {
         // for testing
         var nextUrl;
         if (properties.test === true) {
@@ -177,7 +175,7 @@ CreativeCrowd = (function () {
 
         $.getJSON(nextUrl, nextParams, function (data, status) {
             if (status === "success") {
-                extractWorkerId(data)
+                extractWorkerId(data);
                 viewNext(data);
             } else {
                 alert(status);
@@ -188,6 +186,7 @@ CreativeCrowd = (function () {
     function extractWorkerId( data ) {
         if (data.workerId !== undefined) {
             worker = data.workerId;
+            console.log("Extracted workerId: " + data.workerId);
         }
     }
 
@@ -251,10 +250,10 @@ CreativeCrowd = (function () {
 
             currentViewType = next["type"];
 
-            addHooks();
+            registerHooks();
 
             ractive.on({
-                next: queryNext,
+                next: getNext,
                 post: postSubmit
             });
         }
@@ -263,14 +262,15 @@ CreativeCrowd = (function () {
 
     // TODO make isolated
     function viewPreview() {
-        $.getJSON(routes.preview + properties.experiment, function (preview) {
-            viewNext(preview);
+        $.getJSON(routes.preview + properties.experiment, function ( preview ) {
+            preview.isPreview = true;
+            viewNext( preview );
         })
     }
 
     var hooks = {};
 
-    function addHooks() {
+    function registerHooks() {
         // how can this be done cleaner?
         if (hooks.any !== undefined) {
             ractive.on("submit", hooks.any);
@@ -356,9 +356,14 @@ CreativeCrowd = (function () {
             hooks.finished = call;
         },
 
+        // this needs to block to prevent errors resulting from async access to the ws
+        beforeIdentifyWorker: function ( call ) {
+            hooks.identifyWorker = call;
+        },
+
         //starts loading the first "next view"
         load: function () {
-            properties.preview === true ? viewPreview() : queryNext();
+            properties.preview === true ? viewPreview() : getNext();
         }
     }
 })

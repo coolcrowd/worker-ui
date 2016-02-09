@@ -18,12 +18,15 @@
     <div id="images">
         {{#each pictures}}
         <div class="image"
-             style="background-image: url('{{url}}');">
+             style="background-image: url('{{url}}');
+                    height: 200px;">
         </div>
         <label>{{urlLicense}}</label>
         {{/each}}
     </div>
     {{/if}}
+    {{#if !isPreview}}
     <button on-click="submit">Hand in!</button>
     <button on-click="skip">Skip</button>
+    {{/if}}
 </div>
