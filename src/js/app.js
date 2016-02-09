@@ -68,7 +68,6 @@ CreativeCrowd = (function () {
     var AnswerView = DefaultView.extend({
         template: require("../templates/answerview.html"),
 
-
         oninit: function () {
             this.on({
                 submit: function () {
@@ -86,7 +85,7 @@ CreativeCrowd = (function () {
                     this.fire("next");
                 }
             });
-        },
+        }
     });
 
     var RatingView = DefaultView.extend({
@@ -178,26 +177,18 @@ CreativeCrowd = (function () {
 
         $.getJSON(nextUrl, nextParams, function (data, status) {
             if (status === "success") {
-                if (data.workerId !== undefined) {
-                    worker = data.workerId;
-                }
+                extractWorkerId(data)
                 viewNext(data);
             } else {
                 alert(status);
             }
         });
+    }
 
-//                $.ajax({
-//                    method: "GET",
-//                    url: url,
-//                    accepts: "application/json",
-//                    // Work with the response
-//                    success: function (response) {
-//                        console.log(response); // server response
-//                        viewNext(response)
-//                    }
-//                });
-
+    function extractWorkerId( data ) {
+        if (data.workerId !== undefined) {
+            worker = data.workerId;
+        }
     }
 
     function postSubmit(route, data) {
@@ -209,7 +200,10 @@ CreativeCrowd = (function () {
                 contentType: "application/json",
                 data: JSON.stringify(data),
 
-                success: function (response) {
+                success: function (response, status) {
+                    if (status === 201) {
+                        extractWorkerId(response);
+                    }
                     fulfil(response);
                 },
 
