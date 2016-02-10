@@ -221,6 +221,8 @@ CreativeCrowd = (function () {
         template: require("../templates/ratingview.html"),
 
         oninit: function () {
+            // if answers were skipped dont allow skip ratings
+            this.set("skipAllowed", !skipAnswer);
             this.on({
                 submit: function () {
                     this.fire("submitRating", this.get(), toSubmit);
