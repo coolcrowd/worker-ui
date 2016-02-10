@@ -18,7 +18,7 @@ CreativeCrowd = (function () {
     function getNext() {
         // for testing
         var nextUrl;
-        if (properties.test === true) {
+        if (properties.DEBUG === true) {
             nextUrl = properties.workerServiceURL + types.next() + ".json";
         } else {
             nextUrl = properties.workerServiceURL + 'next/'
@@ -48,30 +48,39 @@ CreativeCrowd = (function () {
     }
 
     function postSubmit(route, data) {
-        return new Promise(function (fulfil, reject) {
-            var jsonData = JSON.stringify(data);
-            console.log("POST: " + route + "\n" + jsonData);
-            $.ajax({
-                method: "POST",
-                url: route,
-                contentType: "application/json",
-                // function to print all posted data
-                data: jsonData,
+        var jsonData = JSON.stringify(data);
+        console.log("POST: " + route + "\n" + jsonData);
+        return $.ajax({
+            method: "POST",
+            url: route,
+            contentType: "application/json",
+            // function to print all posted data
+            data: jsonData,
 
-                success: function (response, status, xhr) {
-                    console.log("RESPONSE: " + status + "\n" + JSON.stringify(response, null, 4));
-                    if (xhr.status === 201) {
-                        extractWorkerId(response);
-                    }
-                    fulfil(response);
-                },
-
-                fail: reject(status)
-            });
-        })
+            success: function (response, status, xhr) {
+                console.log("RESPONSE: " + status + "\n" + JSON.stringify(response, null, 4));
+                if (xhr.status === 201) {
+                    extractWorkerId(response);
+                }
+            }
+        });
     }
 
-    // ------------------ Worker Handling ---------------------
+
+    /**
+     * Sends the value of every key in data seperately
+     * @param route the route of the endpoint
+     * @param data the data
+     */
+    function multipleSubmit(route, data) {
+        for (var key in data) {
+            if (data.hasOwnProperty(key)) {
+                postSubmit(route, data[key]);
+            }
+        }
+    }
+
+// ------------------ Worker Handling ---------------------
 
     function extractWorkerId(data) {
         if (data.workerId !== undefined && data.workerId !== 0) {
@@ -107,7 +116,7 @@ CreativeCrowd = (function () {
         return NOWORKER;
     }
 
-    // -------------- Views -------------------
+// -------------- Views -------------------
     var DefaultView = Ractive.extend({
         el: "#ractive-container",
 
@@ -127,20 +136,11 @@ CreativeCrowd = (function () {
             this.on({
                 submit: function () {
                     toSubmit = this.get("toSubmit");
-                    Promise.all([
-                        postSubmit(routes.email + properties.platform, toSubmit),
-                        // TODO a loading view
-                        ractive.set("loading", true)
-                    ]).then(function (results) {
-                        //var postResponse = results[0];
-                        // TODO what?
-
-                        ractive.set("loading", false);
-
-                    });
-                    // TODO this should be in then, but seems to cause an error
-                    ractive.fire("submitEmail", ractive.get(), toSubmit);
-                    ractive.fire("next");
+                    postSubmit(routes.email + properties.platform, toSubmit)
+                        .then(function () {
+                            ractive.fire("submitEmail", ractive.get(), toSubmit);
+                            ractive.fire("next");
+                        });
                 },
 
                 focus: function () {
@@ -153,7 +153,7 @@ CreativeCrowd = (function () {
                 valid: true
             });
 
-            this.observe("toSubmit.email", function(newValue, oldValue) {
+            this.observe("toSubmit.email", function (newValue, oldValue) {
                 if (oldValue !== undefined) {
                     this.set("valid", this.validateEmail(newValue));
                 }
@@ -165,7 +165,6 @@ CreativeCrowd = (function () {
             var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
             return re.test(email);
         }
-
     });
 
     var CalibrationView = DefaultView.extend({
@@ -176,7 +175,7 @@ CreativeCrowd = (function () {
                 submit: function () {
                     var toSubmit = this.get("toSubmit");
                     toSubmit.experiment = properties.experiment;
-                    postSubmit(routes.calibration + worker, toSubmit);
+                    multipleSubmit(routes.calibration + worker, toSubmit);
                     this.fire("submitCalibration", this.get(), toSubmit);
                     this.fire("next");
                 },
@@ -271,7 +270,7 @@ CreativeCrowd = (function () {
     });
 
 
-    //---------------- View building ------------------------
+//---------------- View building ------------------------
 
     var ractive, currentViewType;
 
@@ -322,7 +321,7 @@ CreativeCrowd = (function () {
 
     }
 
-    // TODO make isolated
+// TODO make isolated
     function viewPreview() {
         $.getJSON(routes.preview + properties.experiment, function (preview) {
             preview.isPreview = true;
@@ -382,12 +381,16 @@ CreativeCrowd = (function () {
          */
         init: function (props) {
             properties = props;
-            if (properties.test) {
-                properties.workerServiceURL = "/WorkerUI/resources/"
+            if (properties.DEBUG) {
+                properties.workerServiceURL = "/WorkerUI/resources/";
             }
             makeRoutes();
             this.currentViewType = "DEFAULT";
             worker = loadWorker();
+            $(document).ajaxError(function (event, request, settings, thrownError) {
+                alert(JSON.stringify(request.statusText + "/n"
+                    + request.responseJSON, null, 4));
+            });
             ractive = new DefaultView();
         },
 

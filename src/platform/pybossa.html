@@ -28,10 +28,9 @@
 
                 });
             });
+
         }
-        else {
-            deferred.resolve(task);
-        }
+        deferred.resolve(task);
     });
 
     pybossa.presentTask(function (task, deferred) {
