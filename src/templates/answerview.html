@@ -26,6 +26,7 @@
     </div>
     {{/if}}
     {{#if !isPreview}}
+    <span>You can hand in <b>{{maxAnswersToGive}}</b> more answers!</span>
     <button on-click="submit">Hand in!</button>
     <button on-click="skip">Skip</button>
     {{/if}}

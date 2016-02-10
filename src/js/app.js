@@ -37,12 +37,10 @@ CreativeCrowd = (function () {
             }
         }
 
-        $.getJSON(nextUrl, nextParams, function (data, status) {
+        return $.getJSON(nextUrl, nextParams, function (data, status) {
             if (status === "success") {
                 extractWorkerId(data);
                 viewNext(data);
-            } else {
-                alert(status);
             }
         });
     }
@@ -137,7 +135,7 @@ CreativeCrowd = (function () {
                 submit: function () {
                     toSubmit = this.get("toSubmit");
                     postSubmit(routes.email + properties.platform, toSubmit)
-                        .then(function () {
+                        .done(function () {
                             ractive.fire("submitEmail", ractive.get(), toSubmit);
                             ractive.fire("next");
                         });
@@ -175,6 +173,7 @@ CreativeCrowd = (function () {
                 submit: function () {
                     var toSubmit = this.get("toSubmit");
                     toSubmit.experiment = properties.experiment;
+                    // TODO promise
                     multipleSubmit(routes.calibration + worker, toSubmit);
                     this.fire("submitCalibration", this.get(), toSubmit);
                     this.fire("next");
@@ -202,10 +201,12 @@ CreativeCrowd = (function () {
                         answer: this.get("toSubmit.answer"),
                         experiment: properties.experiment
                     };
-                    postSubmit(routes.answer + worker, toSubmit);
 
-                    this.fire("submitAnswer", this.get(), toSubmit);
-                    this.fire("next");
+                    postSubmit(routes.answer + worker, toSubmit).done(function () {
+                        // clear answer text field
+                        ractive.set("toSubmit.answer", "");
+                        this.fire("next");
+                    });
                 },
 
                 skip: function () {
@@ -369,7 +370,9 @@ CreativeCrowd = (function () {
 
     function makeRoutes() {
         for (var key in routes) {
-            routes[key] = properties.workerServiceURL + routes[key];
+            if (routes.hasOwnProperty(key)) {
+                routes[key] = properties.workerServiceURL + routes[key];
+            }
         }
     }
 
@@ -388,8 +391,8 @@ CreativeCrowd = (function () {
             this.currentViewType = "DEFAULT";
             worker = loadWorker();
             $(document).ajaxError(function (event, request, settings, thrownError) {
-                alert(JSON.stringify(request.statusText + "/n"
-                    + request.responseJSON, null, 4));
+                alert(request.statusText
+                    + JSON.stringify(request.responseJSON, null, 4));
             });
             ractive = new DefaultView();
         },
