@@ -2,6 +2,111 @@ var Ractive = require("ractive");
 var $ = require("jquery");
 
 CreativeCrowd = (function () {
+
+    // -------------- Requests & Helpers -------------------
+    var types = loop(["email", "calibration", "answer", "rating", "finished"]);
+
+    function loop(array) {
+        var index = 0;
+        return {
+            next: function () {
+                return array[index++ % array.length]
+            }
+        }
+    }
+
+    function getNext() {
+        // for testing
+        var nextUrl;
+        if (properties.test === true) {
+            nextUrl = properties.workerServiceURL + types.next() + ".json";
+        } else {
+            nextUrl = properties.workerServiceURL + 'next/'
+                + properties.platform + '/'
+                + properties.experiment;
+
+            var nextParams = properties.osParams;
+            if (worker !== NOWORKER) {
+                nextParams.worker = worker;
+            }
+            if (skipAnswer) {
+                nextParams.answer = "skip";
+            }
+            if (skipRating) {
+                nextParams.rating = "skip";
+            }
+        }
+
+        $.getJSON(nextUrl, nextParams, function (data, status) {
+            if (status === "success") {
+                extractWorkerId(data);
+                viewNext(data);
+            } else {
+                alert(status);
+            }
+        });
+    }
+
+    function postSubmit(route, data) {
+        return new Promise(function (fulfil, reject) {
+            var jsonData = JSON.stringify(data);
+            console.log("POST: " + route + "\n" + jsonData);
+            $.ajax({
+                method: "POST",
+                url: route,
+                contentType: "application/json",
+                // function to print all posted data
+                data: jsonData,
+
+                success: function (response, status, xhr) {
+                    console.log("RESPONSE: " + status + "\n" + JSON.stringify(response, null, 4));
+                    if (xhr.status === 201) {
+                        extractWorkerId(response);
+                    }
+                    fulfil(response);
+                },
+
+                fail: reject(status)
+            });
+        })
+    }
+
+    // ------------------ Worker Handling ---------------------
+
+    function extractWorkerId(data) {
+        if (data.workerId !== undefined && data.workerId !== 0) {
+            worker = data.workerId;
+            console.log("Extracted workerId: " + data.workerId);
+            persistWorker(worker);
+        }
+    }
+
+    function persistWorker(workerToSet) {
+        if (typeof(Storage) !== "undefined") {
+            // Code for localStorage/sessionStorage.
+            localStorage.worker = workerToSet;
+            console.log("Persisted worker: " + worker);
+        } else {
+            console.log("No localstorage available! Couldn't persist worker.");
+        }
+    }
+
+    function loadWorker() {
+        if (typeof(Storage) !== "undefined") {
+            // Code for localStorage/sessionStorage.
+            if (localStorage.worker) {
+                worker = localStorage.worker;
+                console.log("Loaded worker: " + worker);
+                return worker;
+            } else {
+                console.log("No worker persisted.");
+            }
+        } else {
+            console.log("No localstorage available! Couldn't load worker.");
+        }
+        return NOWORKER;
+    }
+
     // -------------- Views -------------------
     var DefaultView = Ractive.extend({
         el: "#ractive-container",
@@ -25,17 +130,42 @@ CreativeCrowd = (function () {
                     Promise.all([
                         postSubmit(routes.email + properties.platform, toSubmit),
                         // TODO a loading view
-                        this.set("loading", true)
+                        ractive.set("loading", true)
                     ]).then(function (results) {
-                        var postResponse = results[0];
+                        //var postResponse = results[0];
                         // TODO what?
-                        ractive.set("loading", false)
+
+                        ractive.set("loading", false);
+
                     });
-                    this.fire("submitEmail", this.get(), toSubmit);
-                    this.fire("next");
+                    // TODO this should be in then, but seems to cause an error
+                    ractive.fire("submitEmail", ractive.get(), toSubmit);
+                    ractive.fire("next");
+                },
+
+                focus: function () {
+                    this.set("valid", this.validateEmail(this.get("toSubmit.email")));
                 }
             });
+
+            this.set({
+                validate: this.validateEmail,
+                valid: true
+            });
+
+            this.observe("toSubmit.email", function(newValue, oldValue) {
+                if (oldValue !== undefined) {
+                    this.set("valid", this.validateEmail(newValue));
+                }
+            });
+        },
+
+        validateEmail: function (email) {
+            // http://stackoverflow.com/a/46181/11236
+            var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            return re.test(email);
         }
+
     });
 
     var CalibrationView = DefaultView.extend({
@@ -80,6 +210,7 @@ CreativeCrowd = (function () {
                 },
 
                 skip: function () {
+                    skipAnswer = true;
                     this.fire("next");
                 }
             });
@@ -97,6 +228,7 @@ CreativeCrowd = (function () {
                 },
 
                 skip: function () {
+                    skipRating = true;
                     this.fire("next");
                 },
 
@@ -138,78 +270,8 @@ CreativeCrowd = (function () {
         }
     });
 
-    // -------------- Controller -------------------
 
-    var types = loop(["email", "calibration", "answer", "rating", "finished"]);
-
-    function loop(array) {
-        var index = 0;
-        return {
-            next: function () {
-                return array[index++ % array.length]
-            }
-        }
-    }
-
-    function getNext() {
-        // for testing
-        var nextUrl;
-        if (properties.test === true) {
-            nextUrl = properties.workerServiceURL + types.next() + ".json";
-        } else {
-            nextUrl = properties.workerServiceURL + 'next/'
-                + properties.platform + '/'
-                + properties.experiment;
-
-            var nextParams = properties.osParams;
-            if (worker !== NOWORKER) {
-                nextParams.worker = worker;
-            }
-            if (skipAnswer) {
-                nextParams.answer = "skip";
-            }
-            if (skipRating) {
-                nextParams.rating = "skip";
-            }
-        }
-
-        $.getJSON(nextUrl, nextParams, function (data, status) {
-            if (status === "success") {
-                extractWorkerId(data);
-                viewNext(data);
-            } else {
-                alert(status);
-            }
-        });
-    }
-
-    function extractWorkerId( data ) {
-        if (data.workerId !== undefined) {
-            worker = data.workerId;
-            console.log("Extracted workerId: " + data.workerId);
-        }
-    }
-
-    function postSubmit(route, data) {
-        console.log("POST: " + route + "\n" + JSON.stringify(data, null, 4));
-        return new Promise(function (fulfil, reject) {
-            $.ajax({
-                method: "POST",
-                url: route,
-                contentType: "application/json",
-                data: JSON.stringify(data),
-
-                success: function (response, status) {
-                    if (status === 201) {
-                        extractWorkerId(response);
-                    }
-                    fulfil(response);
-                },
-
-                fail: reject(status)
-            });
-        })
-    }
+    //---------------- View building ------------------------
 
     var ractive, currentViewType;
 
@@ -262,9 +324,9 @@ CreativeCrowd = (function () {
 
     // TODO make isolated
     function viewPreview() {
-        $.getJSON(routes.preview + properties.experiment, function ( preview ) {
+        $.getJSON(routes.preview + properties.experiment, function (preview) {
             preview.isPreview = true;
-            viewNext( preview );
+            viewNext(preview);
         })
     }
 
@@ -325,6 +387,7 @@ CreativeCrowd = (function () {
             }
             makeRoutes();
             this.currentViewType = "DEFAULT";
+            worker = loadWorker();
             ractive = new DefaultView();
         },
 
@@ -357,7 +420,7 @@ CreativeCrowd = (function () {
         },
 
         // this needs to block to prevent errors resulting from async access to the ws
-        beforeIdentifyWorker: function ( call ) {
+        beforeIdentifyWorker: function (call) {
             hooks.identifyWorker = call;
         },
 
