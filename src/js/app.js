@@ -14,8 +14,8 @@ CreativeCrowd = (function () {
     function loop(array) {
         var index = 0;
         return {
-            next: function ( viewNum ) {
-                if ( viewNum ) {
+            next: function (viewNum) {
+                if (viewNum) {
                     return array[viewNum - 1];
                 } else {
                     return array[index++ % array.length];
@@ -26,8 +26,8 @@ CreativeCrowd = (function () {
 
     function getNext() {
         var nextUrl;
-        if ( properties.FORCE_VIEW ) {
-            nextUrl = properties.workerServiceURL + types.next( properties.FORCE_VIEW ) + ".json";
+        if (properties.FORCE_VIEW) {
+            nextUrl = properties.workerServiceURL + types.next(properties.FORCE_VIEW) + ".json";
         } else {
             nextUrl = properties.workerServiceURL + 'next/'
                 + properties.platform + '/'
@@ -85,17 +85,17 @@ CreativeCrowd = (function () {
 
         var posts = [];
         for (var i = 0; i < dataArray.length; i++) {
-                posts.push(postSubmit(route, dataArray[i]));
+            posts.push(postSubmit(route, dataArray[i]));
         }
         // as long as there are pending requests, wait
-        for (i = posts.length; i >= 0; i-- ) {
+        for (i = posts.length; i >= 0; i--) {
             $.when(posts[i]).done(function () {
                 posts.pop()
             });
         }
         defer.resolve();
 
-        return defer.promise( submitPromise );
+        return defer.promise(submitPromise);
     }
 
 // ------------------ Worker Handling ---------------------
@@ -193,9 +193,9 @@ CreativeCrowd = (function () {
                 submit: function () {
                     var toSubmit = this.get("toSubmit");
                     toSubmit.experiment = properties.experiment;
-                    multipleSubmit(routes.calibration + worker, toSubmit).done(function() {
-                            ractive.fire("submitCalibration", ractive.get(), toSubmit);
-                            ractive.fire("next");
+                    multipleSubmit(routes.calibration + worker, toSubmit).done(function () {
+                        ractive.fire("submitCalibration", ractive.get(), toSubmit);
+                        ractive.fire("next");
 
                     });
                 },
@@ -238,6 +238,8 @@ CreativeCrowd = (function () {
         }
     });
 
+    const NO_RATING = 0;
+
     var RatingView = DefaultView.extend({
         template: require("../templates/ratingview.html"),
 
@@ -248,36 +250,18 @@ CreativeCrowd = (function () {
             this.set("skipAllowed", !skipAnswer);
             this.on({
                 submit: function () {
-                    /**
-                     * As array
-                     * ratingId
-                     * rating = value of ratingOptions
-                     * experiment
-                     * answerId
-                     * feedback
-                     * constraints
-                     */
+                    var toSubmit;
+                        toSubmit = this.parseRatings( function ( requiredRating ) {
+                            var node = ractive.find('#rating-options-' + requiredRating);
+                            ractive.set("answersToRate[requiredRating]", "required");
+                        });
 
-                    var answersToRate = this.get("answersToRate");
-                    var toSubmit = [];
-                    var experiment = parent.properties.experiment;
-                    var ratings = this.get("toSubmit.ratings");
-                    var feedback = this.get("toSubmit.feedback");
-                    for (var i = 0; i < answersToRate.length; i++) {
-                        var ratingId = answersToRate[i].id;
-                        var ratedAnswer = {
-                            ratingId: ratingId,
-                            rating: ratings[ratingId.toString()],
-                            experiment: experiment,
-                            answerId: answersToRate[i].answerId,
-                            feedback: feedback[i]
-                        };
-                        toSubmit.push(ratedAnswer);
+                    if (toSubmit !== null) {
+                        multipleSubmit(routes.rating + worker, toSubmit).done(function () {
+                            ractive.fire("submitRating", ractive.get(), toSubmit);
+                            ractive.fire("next");
+                        });
                     }
-                    multipleSubmit(routes.rating + worker, toSubmit).done(function () {
-                        this.fire("submitRating", ractive.get(), toSubmit);
-                        this.fire("next");
-                    });
                 },
 
                 skip: function () {
@@ -304,187 +288,223 @@ CreativeCrowd = (function () {
                     this.set("toSubmit.ratings", ratings);
                 }
             });
-        }
+        },
 
-    });
+        parseRatings: function ( requireCallback ) {
+            /**
+             * As array
+             * ratingId
+             * rating = value of ratingOptions
+             * experiment
+             * answerId
+             * feedback
+             * constraints
+             */
+            var answersToRate = this.get("answersToRate");
+            var toSubmit = [];
+            var experiment = parent.properties.experiment;
+            var ratings = this.get("toSubmit.ratings");
+            var feedback = this.get("toSubmit.feedback");
+            var ratedAnswer;
+            for (var i = 0; i < answersToRate.length; i++) {
+                var ratingId = answersToRate[i].id;
+                var rating = ratings[ratingId.toString()];
+                ratedAnswer = {};
+                ratedAnswer.ratingId = ratingId;
+                if (rating !== undefined) {
+                    ratedAnswer.rating = rating;
+                } else {
+                    requireCallback(ratingId);
+                    return null;
+                }
+                ratedAnswer.experiment = experiment;
+                ratedAnswer.answerId = answersToRate[i].answerId;
+                ratedAnswer.feedback = feedback[i];
+                toSubmit.push(ratedAnswer);
+            }
+        return toSubmit;
+}
 
-    var FinishedView = DefaultView.extend({
-        template: require("../templates/finishedview.html"),
 
-        oninit: function () {
-            var nono = ["no more", "still no more", "really not any more"];
-            var i = 0;
-            this.on("next", function () {
-                this.set("nono", nono[i++ % 3]);
-                this.fire("submitFinished");
-            })
-        }
-    });
+});
+
+var FinishedView = DefaultView.extend({
+    template: require("../templates/finishedview.html"),
+
+    oninit: function () {
+        var nono = ["no more", "still no more", "really not any more"];
+        var i = 0;
+        this.on("next", function () {
+            this.set("nono", nono[i++ % 3]);
+            this.fire("submitFinished");
+        })
+    }
+});
 
 
 //---------------- View building ------------------------
 
-    var ractive, currentViewType;
+var ractive, currentViewType;
 
-    function viewNext(next) {
-        if (next["type"] === currentViewType) {
-            ractive.set(next);
-        } else {
-            ractive.teardown();
-            switch (next["type"]) {
-                case "EMAIL":
-                    ractive = new EmailView({
-                        data: next
-                    });
-                    break;
-                case "CALIBRATION":
-                    ractive = new CalibrationView({
-                        data: next
-                    });
-                    break;
-                case "ANSWER":
-                    ractive = new AnswerView({
-                        data: next
-                    });
-                    break;
-                case "RATING":
-                    ractive = new RatingView({
-                        data: next
-                    });
-                    break;
-                case "FINISHED":
-                    ractive = new FinishedView({
-                        data: next
-                    });
-                    break;
-                default:
-                    console.log("Unknown type: " + next["type"])
-            }
-
-            currentViewType = next["type"];
-
-            registerHooks();
-
-            ractive.on({
-                next: getNext,
-                post: postSubmit
-            });
+function viewNext(next) {
+    if (next["type"] === currentViewType) {
+        ractive.set(next);
+    } else {
+        ractive.teardown();
+        switch (next["type"]) {
+            case "EMAIL":
+                ractive = new EmailView({
+                    data: next
+                });
+                break;
+            case "CALIBRATION":
+                ractive = new CalibrationView({
+                    data: next
+                });
+                break;
+            case "ANSWER":
+                ractive = new AnswerView({
+                    data: next
+                });
+                break;
+            case "RATING":
+                ractive = new RatingView({
+                    data: next
+                });
+                break;
+            case "FINISHED":
+                ractive = new FinishedView({
+                    data: next
+                });
+                break;
+            default:
+                console.log("Unknown type: " + next["type"])
         }
 
+        currentViewType = next["type"];
+
+        registerHooks();
+
+        ractive.on({
+            next: getNext,
+            post: postSubmit
+        });
     }
+
+}
 
 // TODO make isolated
-    function viewPreview() {
-        $.getJSON(routes.preview + properties.experiment, function (preview) {
-            preview.isPreview = true;
-            viewNext(preview);
-        })
+function viewPreview() {
+    $.getJSON(routes.preview + properties.experiment, function (preview) {
+        preview.isPreview = true;
+        viewNext(preview);
+    })
+}
+
+var hooks = {};
+
+function registerHooks() {
+    // how can this be done cleaner?
+    if (hooks.any !== undefined) {
+        ractive.on("submit", hooks.any);
     }
-
-    var hooks = {};
-
-    function registerHooks() {
-        // how can this be done cleaner?
-        if (hooks.any !== undefined) {
-            ractive.on("submit", hooks.any);
-        }
-        if (hooks.email !== undefined) {
-            ractive.on("submitEmail", hooks.email);
-        }
-        if (hooks.calibration !== undefined) {
-            ractive.on("submitCalibration", hooks.calibration);
-        }
-        if (hooks.answer !== undefined) {
-            ractive.on("submitAnswer", hooks.answer);
-        }
-        if (hooks.rating !== undefined) {
-            ractive.on("submitRating", hooks.rating);
-        }
-        if (hooks.finished !== undefined) {
-            ractive.on("submitFinished", hooks.finished);
-        }
+    if (hooks.email !== undefined) {
+        ractive.on("submitEmail", hooks.email);
     }
-
-    const NOWORKER = "no_worker_set";
-    var properties;
-    var worker = NOWORKER;
-    var skipAnswer = false;
-    var skipRating = false;
-    var preview = false;
-    var routes = {
-        email: "emails/",
-        calibration: "calibrations/",
-        answer: "answers/",
-        rating: "ratings/",
-        preview: "preview/"
-    };
-
-    function makeRoutes() {
-        for (var key in routes) {
-            if (routes.hasOwnProperty(key)) {
-                routes[key] = properties.workerServiceURL + routes[key];
-            }
-        }
+    if (hooks.calibration !== undefined) {
+        ractive.on("submitCalibration", hooks.calibration);
     }
+    if (hooks.answer !== undefined) {
+        ractive.on("submitAnswer", hooks.answer);
+    }
+    if (hooks.rating !== undefined) {
+        ractive.on("submitRating", hooks.rating);
+    }
+    if (hooks.finished !== undefined) {
+        ractive.on("submitFinished", hooks.finished);
+    }
+}
 
-    return {
-        /**
-         * Reserved words for osParams:
-         * worker, answer, rating
-         * @param props
-         */
-        init: function (props) {
-            properties = props;
-            makeRoutes();
-            this.currentViewType = "DEFAULT";
-            worker = loadWorker();
-            $(document).ajaxError(function (event, request, settings, thrownError) {
-                alert(request.statusText
-                    + JSON.stringify(request.responseJSON, null, 4));
-            });
-            ractive = new DefaultView();
-        },
+const NOWORKER = "no_worker_set";
+var properties;
+var worker = NOWORKER;
+var skipAnswer = false;
+var skipRating = false;
+var preview = false;
+var routes = {
+    email: "emails/",
+    calibration: "calibrations/",
+    answer: "answers/",
+    rating: "ratings/",
+    preview: "preview/"
+};
 
-        onSubmitAny: function (call) {
-            hooks.any = call;
-        },
-
-        onSubmitEmail: function (call) {
-            hooks.email = call;
-        },
-
-        onSubmitCalibration: function (call) {
-            hooks.calibration = call
-        },
-
-        /**
-         *
-         * @param call the function call that gets called with arguments viewData, submittedData
-         */
-        onSubmitAnswer: function (call) {
-            hooks.answer = call;
-        },
-
-        onSubmitRating: function (call) {
-            hooks.rating = call;
-        },
-
-        onFinished: function (call) {
-            hooks.finished = call;
-        },
-
-        // this needs to block to prevent errors resulting from async access to the ws
-        beforeIdentifyWorker: function (call) {
-            hooks.identifyWorker = call;
-        },
-
-        //starts loading the first "next view"
-        load: function () {
-            if (properties.FORCE_VIEW) {
-                properties.workerServiceURL = "/WorkerUI/resources/";
-            }
-            properties.preview === true ? viewPreview() : getNext();
+function makeRoutes() {
+    for (var key in routes) {
+        if (routes.hasOwnProperty(key)) {
+            routes[key] = properties.workerServiceURL + routes[key];
         }
     }
+}
+
+return {
+    /**
+     * Reserved words for osParams:
+     * worker, answer, rating
+     * @param props
+     */
+    init: function (props) {
+        properties = props;
+        makeRoutes();
+        this.currentViewType = "DEFAULT";
+        worker = loadWorker();
+        $(document).ajaxError(function (event, request, settings, thrownError) {
+            alert(request.statusText
+                + JSON.stringify(request.responseJSON, null, 4));
+        });
+        ractive = new DefaultView();
+    },
+
+    onSubmitAny: function (call) {
+        hooks.any = call;
+    },
+
+    onSubmitEmail: function (call) {
+        hooks.email = call;
+    },
+
+    onSubmitCalibration: function (call) {
+        hooks.calibration = call
+    },
+
+    /**
+     *
+     * @param call the function call that gets called with arguments viewData, submittedData
+     */
+    onSubmitAnswer: function (call) {
+        hooks.answer = call;
+    },
+
+    onSubmitRating: function (call) {
+        hooks.rating = call;
+    },
+
+    onFinished: function (call) {
+        hooks.finished = call;
+    },
+
+    // this needs to block to prevent errors resulting from async access to the ws
+    beforeIdentifyWorker: function (call) {
+        hooks.identifyWorker = call;
+    },
+
+    //starts loading the first "next view"
+    load: function () {
+        if (properties.FORCE_VIEW) {
+            properties.workerServiceURL = "/WorkerUI/resources/";
+        }
+        properties.preview === true ? viewPreview() : getNext();
+    }
+}
 })
 ();

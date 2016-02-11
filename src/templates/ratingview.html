@@ -2,7 +2,10 @@
     {{>experimentHeader}}
     {{#answersToRate:i}}
     <div id="ratingId-{{id}}">
-        <div id="rating-options">
+        <div id="answer-container">
+            {{answer}}
+        </div>
+        <div id="rating-options-{{answersToRate[i].id}}" class="{{.required}}">
             <span>Please rate!</span>
             {{#each ratingOptions:j}}
             <label>
