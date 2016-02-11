@@ -4,37 +4,45 @@ var $ = require("jquery");
 CreativeCrowd = (function () {
 
     // -------------- Requests & Helpers -------------------
-    var types = loop(["rating", "email", "calibration", "answer", "finished"]);
+    var types = loop(["email", "calibration", "rating", "answer", "finished"]);
+    const EMAIL = 1;
+    const CALIBRATION = 2;
+    const RATING = 3;
+    const ANSWER = 4;
+    const FINISHED = 5;
 
     function loop(array) {
         var index = 0;
         return {
-            next: function () {
-                return array[index++ % array.length]
+            next: function ( viewNum ) {
+                if ( viewNum ) {
+                    return array[viewNum];
+                } else {
+                    return array[index++ % array.length];
+                }
             }
         }
     }
 
     function getNext() {
-        // for testing
         var nextUrl;
-        if (properties.DEBUG) {
-            nextUrl = properties.workerServiceURL + types.next() + ".json";
+        if ( properties.FORCE_VIEW ) {
+            nextUrl = properties.workerServiceURL + types.next( properties.FORCE_VIEW ) + ".json";
         } else {
             nextUrl = properties.workerServiceURL + 'next/'
                 + properties.platform + '/'
                 + properties.experiment;
+        }
 
-            var nextParams = properties.osParams;
-            if (worker !== NOWORKER) {
-                nextParams.worker = worker;
-            }
-            if (skipAnswer) {
-                nextParams.answer = "skip";
-            }
-            if (skipRating) {
-                nextParams.rating = "skip";
-            }
+        var nextParams = properties.osParams;
+        if (worker !== NOWORKER) {
+            nextParams.worker = worker;
+        }
+        if (skipAnswer) {
+            nextParams.answer = "skip";
+        }
+        if (skipRating) {
+            nextParams.rating = "skip";
         }
 
         return $.getJSON(nextUrl, nextParams, function (data, status) {
@@ -205,7 +213,7 @@ CreativeCrowd = (function () {
                     postSubmit(routes.answer + worker, toSubmit).done(function () {
                         // clear answer text field
                         ractive.set("toSubmit.answer", "");
-                        this.fire("next");
+                        ractive.fire("next");
                     });
                 },
 
@@ -413,9 +421,6 @@ CreativeCrowd = (function () {
          */
         init: function (props) {
             properties = props;
-            if (properties.DEBUG) {
-                properties.workerServiceURL = "/WorkerUI/resources/";
-            }
             makeRoutes();
             this.currentViewType = "DEFAULT";
             worker = loadWorker();
@@ -461,6 +466,9 @@ CreativeCrowd = (function () {
 
         //starts loading the first "next view"
         load: function () {
+            if (properties.FORCE_VIEW) {
+                properties.workerServiceURL = "/WorkerUI/resources/";
+            }
             properties.preview === true ? viewPreview() : getNext();
         }
     }
