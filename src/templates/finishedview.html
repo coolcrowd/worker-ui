@@ -1,2 +1,5 @@
-    <span>You have finished all tasks. Thank you for participating!</span>
+    <span>You have finished all tasks. Thank you for participating!</span><br>
+    {{#if nono}}
+    There are <b>{{nono}}</b> tasks for you!
+    {{/if}}
     <button on-click="next">Next!</button>

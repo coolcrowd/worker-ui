@@ -16,7 +16,7 @@ CreativeCrowd = (function () {
         return {
             next: function ( viewNum ) {
                 if ( viewNum ) {
-                    return array[viewNum -  1];
+                    return array[viewNum - 1];
                 } else {
                     return array[index++ % array.length];
                 }
@@ -78,12 +78,24 @@ CreativeCrowd = (function () {
      * @param route the route of the endpoint
      * @param data the data
      */
-    function multipleSubmit(route, data) {
-        for (var key in data) {
-            if (data.hasOwnProperty(key)) {
-                postSubmit(route, data[key]);
-            }
+    function multipleSubmit(route, dataArray) {
+        // TODO proper handling
+        var defer = $.Deferred();
+        var submitPromise = {};
+
+        var posts = [];
+        for (var i = 0; i < dataArray.length; i++) {
+                posts.push(postSubmit(route, dataArray[i]));
         }
+        // as long as there are pending requests, wait
+        for (i = posts.length; i >= 0; i-- ) {
+            $.when(posts[i]).done(function () {
+                posts.pop()
+            });
+        }
+        defer.resolve();
+
+        return defer.promise( submitPromise );
     }
 
 // ------------------ Worker Handling ---------------------
@@ -181,10 +193,11 @@ CreativeCrowd = (function () {
                 submit: function () {
                     var toSubmit = this.get("toSubmit");
                     toSubmit.experiment = properties.experiment;
-                    // TODO promise
-                    multipleSubmit(routes.calibration + worker, toSubmit);
-                    this.fire("submitCalibration", this.get(), toSubmit);
-                    this.fire("next");
+                    multipleSubmit(routes.calibration + worker, toSubmit).done(function() {
+                            ractive.fire("submitCalibration", ractive.get(), toSubmit);
+                            ractive.fire("next");
+
+                    });
                 },
 
                 radioChange: function () {
@@ -233,7 +246,6 @@ CreativeCrowd = (function () {
 
             // if answers were skipped dont allow skip ratings
             this.set("skipAllowed", !skipAnswer);
-            console.log(JSON.stringify(this.get(""), null, 4));
             this.on({
                 submit: function () {
                     /**
@@ -262,9 +274,8 @@ CreativeCrowd = (function () {
                         };
                         toSubmit.push(ratedAnswer);
                     }
-                    console.log(JSON.stringify(toSubmit, null, 4));
                     multipleSubmit(routes.rating + worker, toSubmit).done(function () {
-                        this.fire("submitRating", this.get(), toSubmit);
+                        this.fire("submitRating", ractive.get(), toSubmit);
                         this.fire("next");
                     });
                 },
@@ -301,8 +312,11 @@ CreativeCrowd = (function () {
         template: require("../templates/finishedview.html"),
 
         oninit: function () {
+            var nono = ["no more", "still no more", "really not any more"];
+            var i = 0;
             this.on("next", function () {
-                this.fire("submitFinished")
+                this.set("nono", nono[i++ % 3]);
+                this.fire("submitFinished");
             })
         }
     });
