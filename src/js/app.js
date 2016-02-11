@@ -16,7 +16,7 @@ CreativeCrowd = (function () {
         return {
             next: function ( viewNum ) {
                 if ( viewNum ) {
-                    return array[viewNum];
+                    return array[viewNum -  1];
                 } else {
                     return array[index++ % array.length];
                 }
