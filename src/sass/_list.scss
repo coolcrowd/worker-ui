@@ -1,0 +1,108 @@
+.list {
+  padding: 0;
+  margin: 0;
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.list > li {
+  line-height: 50px;
+  padding: 0 15px;
+  display: table-row;
+  width: 100%;
+  box-sizing: border-box;
+  border-bottom: 1px solid #ddd; /* solid color because of border-collapse */
+}
+
+.list-large > li {
+  display: block;
+}
+
+.list > li:first-child {
+  border-top: 1px solid #ddd; /* solid color because of border-collapse */
+}
+
+.list > li:not(.list-empty) > * {
+  display: table-cell;
+}
+
+.list-large > li:not(.list-empty) > * {
+  display: inline-block;
+  line-height: 18px;
+}
+
+.list a {
+  font-weight: bold;
+  text-decoration: none;
+  color: #111;
+}
+
+.list-large .list-actions {
+  float: right;
+  line-height: 50px !important;
+  transform: translateY(4px);
+}
+
+.list-actions {
+  text-align: right;
+}
+
+.list-actions > .action {
+  color: #08e !important;
+  background: transparent !important;
+  border-bottom: 0;
+}
+
+.list-actions > .action-constructive {
+  color: #00ac4d !important;
+}
+
+.list-actions > .action-destructive {
+  color: #ab3900 !important;
+}
+
+.list-empty {
+  font-style: italic;
+  text-align: center;
+  color: #888;
+  display: table-cell !important;
+  line-height: 24px !important;
+  padding: 30px 0 !important;
+}
+
+.list-empty .fa {
+  color: #ddd;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 600px) {
+  .list {
+    display: block;
+  }
+
+  .list > li {
+    display: block;
+    line-height: 40px;
+    padding: 10px 25px;
+    background: white;
+    margin: 0 -25px;
+    width: calc(100% + 50px);
+    border-color: #eee !important;
+  }
+
+  .list > li.list-empty {
+    display: block !important;
+  }
+
+  .list > li > a {
+    display: block !important;
+    font-size: 110%;
+  }
+
+  .list-actions {
+    display: block !important;
+    text-align: left;
+    margin: 0 -5px;
+  }
+}

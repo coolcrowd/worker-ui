@@ -1,0 +1,62 @@
+.actions {
+  float: right;
+  line-height: 40px;
+  text-align: right;
+}
+
+.action {
+  display: inline-block;
+  line-height: 18px;
+  text-decoration: none;
+  background: #08e;
+  color: white;
+  padding: 4px 12px 4px 8px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  border-bottom: 1px solid rgba(0,0,0,.1);
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0 4px;
+  cursor: pointer;
+  font-family: "Lato", sans-serif;
+}
+
+.action:disabled {
+  opacity: .5;
+  background: #ccc !important;
+  cursor: default;
+}
+
+.action:hover:not(:disabled) {
+  box-shadow: 0 0 0 1000px rgba(0,0,0,.05) inset;
+}
+
+.action:focus {
+  border: 1px solid rgba(0,0,0,.2);
+  outline: 0;
+}
+
+.action .icon {
+  margin-right: 8px;
+  transform: translateY(-1px);
+}
+
+.action-constructive {
+  background-color: #00ac4d !important;
+  color: white;
+}
+
+.action-destructive {
+  background-color: #ab3900 !important;
+  color: white;
+}
+
+.actions-bottom {
+  padding: 15px;
+}
+
+.actions-bottom .action, .action-large {
+  line-height: 26px;
+  padding-left: 15px;
+  padding-right: 19px;
+}
