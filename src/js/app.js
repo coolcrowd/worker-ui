@@ -4,7 +4,7 @@ var $ = require("jquery");
 CreativeCrowd = (function () {
 
     // -------------- Requests & Helpers -------------------
-    var types = loop(["email", "calibration", "answer", "rating", "finished"]);
+    var types = loop(["rating", "email", "calibration", "answer", "finished"]);
 
     function loop(array) {
         var index = 0;
@@ -18,7 +18,7 @@ CreativeCrowd = (function () {
     function getNext() {
         // for testing
         var nextUrl;
-        if (properties.DEBUG === true) {
+        if (properties.DEBUG) {
             nextUrl = properties.workerServiceURL + types.next() + ".json";
         } else {
             nextUrl = properties.workerServiceURL + 'next/'
@@ -221,12 +221,44 @@ CreativeCrowd = (function () {
         template: require("../templates/ratingview.html"),
 
         oninit: function () {
+            //appendRatingId();
+
             // if answers were skipped dont allow skip ratings
             this.set("skipAllowed", !skipAnswer);
+            console.log(JSON.stringify(this.get(""), null, 4));
             this.on({
                 submit: function () {
-                    this.fire("submitRating", this.get(), toSubmit);
-                    this.fire("next");
+                    /**
+                     * As array
+                     * ratingId
+                     * rating = value of ratingOptions
+                     * experiment
+                     * answerId
+                     * feedback
+                     * constraints
+                     */
+
+                    var answersToRate = this.get("answersToRate");
+                    var toSubmit = [];
+                    var experiment = parent.properties.experiment;
+                    var ratings = this.get("toSubmit.ratings");
+                    var feedback = this.get("toSubmit.feedback");
+                    for (var i = 0; i < answersToRate.length; i++) {
+                        var ratingId = answersToRate[i].id;
+                        var ratedAnswer = {
+                            ratingId: ratingId,
+                            rating: ratings[ratingId.toString()],
+                            experiment: experiment,
+                            answerId: answersToRate[i].answerId,
+                            feedback: feedback[i]
+                        };
+                        toSubmit.push(ratedAnswer);
+                    }
+                    console.log(JSON.stringify(toSubmit, null, 4));
+                    multipleSubmit(routes.rating + worker, toSubmit).done(function () {
+                        this.fire("submitRating", this.get(), toSubmit);
+                        this.fire("next");
+                    });
                 },
 
                 skip: function () {
@@ -234,32 +266,27 @@ CreativeCrowd = (function () {
                     this.fire("next");
                 },
 
-                checkboxChange: function () {
-                    var checks = this.findAll('input[type="checkbox"]:checked').map(function (check) {
-                        return {
-                            // id is something like 0-1, 0-2, 0-3,
-                            // where the first number is the calibrationId and the second the answerOptions.index
-                            ratingId: checks.id.charAt(0)
-                        };
-                    });
-                    this.set("toSubmit.constraints", checks);
-                },
-
-                //TODO radio submit
                 radioChange: function () {
-                    var radios = this.findAll('input[type="radio"]:checked').map(function (radio) {
-                        return {
-                            answerOption: radio.value
-                        };
-                    });
-                    this.set("toSubmit", radios);
+                    var previousRatings = ractive.get("toSubmit.ratings");
+                    if (previousRatings === undefined) {
+                        previousRatings = {};
+                    }
+
+                    var ratings = this.findAll('input[type="radio"]:checked').reduce(
+                        function (previousRatings, radio, index, array) {
+                            var rating = radio.value;
+                            // the rating id is stored in the id attribute that looks for example like
+                            // id="12-ratingId-0-1" the first number is the ratingId
+                            var ratingId = radio.id.split("-", 1)[0].toString();
+                            // return object with ratingId as key for rating
+                            previousRatings[ratingId] = rating;
+                            return previousRatings;
+                        }, previousRatings);
+                    this.set("toSubmit.ratings", ratings);
                 }
             });
-        },
-
-        submit: function (toSubmit) {
-            parent.postSubmit(routes.rating + worker, toSubmit);
         }
+
     });
 
     var FinishedView = DefaultView.extend({

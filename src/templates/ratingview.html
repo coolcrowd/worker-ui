@@ -1,12 +1,12 @@
 <div id="ratings">
     {{>experimentHeader}}
-    {{#each answers :i}}
-    <div id="rating-{{i}}">
+    {{#answersToRate:i}}
+    <div id="ratingId-{{id}}">
         <div id="rating-options">
             <span>Please rate!</span>
             {{#each ratingOptions:j}}
             <label>
-                <input on-change="radioChange" type="radio" name="options-{{i}}" id="{{i}}-{{j}}" value={{id}}>
+                <input on-change="radioChange" type="radio" name="options-{{i}}" id="{{answersToRate[i].id}}-ratingId-{{i}}-{{j}}" value={{value}}>
                 {{description}}
             </label>
             {{/each}}
@@ -16,16 +16,18 @@
                 The answer has the following constraints.
                 Check all that are violated and do not apply for this answer.
             </span><br>
-            {{#each constraints:j}}
-            <label>
-                <input on-change="checkboxChange" type="checkbox" name="{{value}}-{{i}}" id="{{i}}-{{j}}">
-                {{name}}
-            </label>
-            {{/each}}
+                {{#each constraints:j}}
+                <label>
+                    <input on-change="checkboxChange" type="checkbox" name="{{~/toSubmit.constraints[i]}}"
+                           id="{{answersToRate[i].id}}-calibrationId-{{i}}-{{j}}" value="{{id}}">
+                    {{name}}
+                </label>
+                {{/each}}
+
         </div>
+        <textarea name="feedback" placeholder="Write a feedback for the author! (optional)" value="{{toSubmit.feedback[i]}}"></textarea>
     </div>
-    {{/each}}
-    <textarea name="feedback" placeholder="Write a feedback! (optional)"></textarea>
+    {{/answersToRate}}
 </div>
 <button on-click="submit">Hand in!</button>
 {{#if skipAllowed}}
