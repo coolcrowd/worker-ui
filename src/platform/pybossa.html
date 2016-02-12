@@ -4,12 +4,7 @@
     pybossa.taskLoaded(function (task, deferred) {
         if (!$.isEmptyObject(task)) {
             CreativeCrowd.init(properties = {
-                workerServiceURL: "https://worker.pse.kelunik.com/",
-                // those params will be passed to the crowdplatform implementaion in the object service
-                osParams: {
-                    workerId: 121,
-                    assignmentId: 1234
-                },
+                workerServiceURL: "http://localhost:8080",
                 platform: task.info.platformName,
                 experiment: task.info.expID,
                 preview: false,
@@ -24,7 +19,7 @@
 
             CreativeCrowd.beforeIdentifyWorker(function () {
                 var code = generateCode();
-                pybossa.saveTask(task.info.idTask[0], code).done(function () {
+                var taskRun = pybossa.saveTask(task.info.idTask[0], code).done(function () {
 
                 });
             });
@@ -52,5 +47,5 @@
         }).join('');
     }
 
-    pybossa.run('ccw');
+    pybossa.run('crowdcontrol');
 </script>
