@@ -532,6 +532,9 @@ CreativeCrowd = (function () {
             hooks.identifyWorker = call;
         },
 
+
+        generateAuthHash: require("./generateAuthHash").generateAuthHash(),
+
         //starts loading the first "next view"
         load: function () {
             if (properties.FORCE_VIEW) {

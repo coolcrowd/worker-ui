@@ -5,12 +5,12 @@
         if (!$.isEmptyObject(task)) {
             var returnTask = sessionStorage.returnTask;
             if (task.info.type === "idTask" && sessionStorage.returnTask !== undefined) {
-                var code = generateCode();
-                pybossa.saveTask(task.id, code).done(function (taskRun) {
+                var authHash = CreativeCrowd.generateAuthHash();
+                pybossa.saveTask(task.id, authHash.base64UrlHash).done(function (taskRun) {
                     sessionStorage.identifyParams = {
                         workerId: taskRun.user_id,
                         idTask: task.id,
-                        code: code};
+                        code: authHash.random};
                     deferred.resolve(task);
                     // return to prev task
                     window.location.replace("http://localhost:5000/project/ccw/task/" + returnTask);
@@ -60,14 +60,6 @@
 //            $("#finish").fadeIn(500);
         }
     });
-
-    // this generates a random code with 10 characters in [a-zA-Z0-9]
-    function generateCode() {
-        var s = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        return Array.apply(null, new Array(10)).map(function () {
-            return s.charAt(Math.floor(Math.random() * s.length));
-        }).join('');
-    }
 
     pybossa.run('ccw');
 

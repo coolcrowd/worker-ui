@@ -4,7 +4,9 @@ We downloaded the project from
 https://github.com/bitwiseshiftleft/sjcl
 and built it with the following steps.
 
-`./configure --without-all --with-sha256`
+`./configure --without-all --with-sha256 --with-codecBase64`
+
+`make test`
 
 `make`
 
