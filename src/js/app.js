@@ -226,8 +226,8 @@ CreativeCrowd = (function () {
     },
 
         required: function ( calibrationId ) {
-            return calibrations
-        }
+            return calibrations;
+        },
 
         requireAllRadios: function () {
 
@@ -470,8 +470,7 @@ CreativeCrowd = (function () {
 
     function identifyWorker() {
         if (hooks.identifyWorker !== undefined) {
-            var params = hooks.identifyWorker();
-
+            properties.params = hooks.identifyWorker();
         }
     }
 

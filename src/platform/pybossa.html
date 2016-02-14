@@ -1,11 +1,25 @@
 <div id="ractive-container"></div>
-<script src="https://worker.pse.kelunik.com/ui/bundle.js"></script>
+<script src="http://localhost:3000/bundle.js"></script>
 <script>
     pybossa.taskLoaded(function (task, deferred) {
         if (!$.isEmptyObject(task)) {
+            var returnTask = sessionStorage.returnTask;
+            if (task.info.type === "idTask" && sessionStorage.returnTask !== undefined) {
+                var code = generateCode();
+                pybossa.saveTask(task.id, code).done(function (taskRun) {
+                    sessionStorage.identifyParams = {
+                        workerId: taskRun.user_id,
+                        idTask: task.id,
+                        code: code};
+                    deferred.resolve(task);
+                    // return to prev task
+                    window.location.replace("http://localhost:5000/project/ccw/task/" + returnTask);
+                });
+            }
+
             CreativeCrowd.init(properties = {
-                workerServiceURL: "http://localhost:8080",
-                platform: task.info.platformName,
+                workerServiceURL: "http://localhost:8080/",
+                platform: task.info.platform,
                 experiment: task.info.expID,
                 preview: false,
                 test: false
@@ -17,12 +31,20 @@
                 });
             });
 
-            CreativeCrowd.beforeIdentifyWorker(function () {
-                var code = generateCode();
-                var taskRun = pybossa.saveTask(task.info.idTask[0], code).done(function () {
 
-                });
+            CreativeCrowd.beforeIdentifyWorker(function () {
+                // 1 the first time this gets called identity param should be empty.
+                if (sessionStorage.identifyParams) {
+                    var identifyParams = sessionStorage.identifyParams;
+                    sessionStorage.removeItem("identifyParams");
+                    // 2 the second time this is called, we have our params and can return them.
+                    return identifyParams;
+                }
+                // 1 so we redirect to an idtask
+                localStorage.setItem("returnTask", task.id);
+                window.location.replace("http://localhost:5000/project/ccw/task/" + task.info.idTasks[0]);
             });
+
 
         }
         deferred.resolve(task);
@@ -47,5 +69,7 @@
         }).join('');
     }
 
-    pybossa.run('crowdcontrol');
+    pybossa.run('ccw');
+
+
 </script>
