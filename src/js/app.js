@@ -54,6 +54,16 @@ CreativeCrowd = (function () {
     }
 
     function postSubmit(route, data) {
+        if (data.email && properties.osParams) {
+            route += "?";
+            var params = properties.osParams;
+            for (var key in params) {
+                if (params.hasOwnProperty(key)) {
+                    route += key + "=" + params[key] + "&";
+                }
+            }
+            route = route.substr(0, route.length - 1);
+        }
         var jsonData = JSON.stringify(data);
         console.log("POST: " + route + "\n" + jsonData);
         return $.ajax({
@@ -121,8 +131,8 @@ CreativeCrowd = (function () {
     function loadWorker() {
         if (typeof(Storage) !== "undefined") {
             // Code for localStorage/sessionStorage.
-            if (localStorage.worker) {
-                worker = localStorage.worker;
+            if (localStorage.getItem("worker")) {
+                worker = localStorage.getItem("worker");
                 console.log("Loaded worker: " + worker);
                 return worker;
             } else {
@@ -470,7 +480,7 @@ CreativeCrowd = (function () {
 
     function identifyWorker() {
         if (hooks.identifyWorker !== undefined) {
-            properties.params = hooks.identifyWorker();
+            properties.osParams = hooks.identifyWorker();
         }
     }
 
@@ -484,10 +494,6 @@ CreativeCrowd = (function () {
             properties = props;
             makeRoutes();
             this.currentViewType = "DEFAULT";
-            worker = loadWorker();
-            if (worker === NO_WORKER) {
-                identifyWorker();
-            }
             $(document).ajaxError(function (event, request, settings, thrownError) {
                 alert(request.statusText
                     + JSON.stringify(request.responseJSON, null, 4));
@@ -533,10 +539,14 @@ CreativeCrowd = (function () {
         },
 
 
-        generateAuthHash: require("./generateAuthHash").generateAuthHash(),
+        generateAuthHash: require("./generateAuthHash").generateAuthHash,
 
         //starts loading the first "next view"
         load: function () {
+            worker = loadWorker();
+            if (worker === NO_WORKER) {
+                identifyWorker();
+            }
             if (properties.FORCE_VIEW) {
                 properties.workerServiceURL = "/WorkerUI/resources/";
             }
