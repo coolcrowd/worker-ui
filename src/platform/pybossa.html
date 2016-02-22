@@ -1,61 +1,64 @@
 <div id="ractive-container"></div>
 <script src="http://localhost:3000/bundle.js"></script>
 <script>
+
+    function doIdTask(idTasks) {
+        var idTask = idTasks[0];
+        var authHash = CreativeCrowd.generateAuthHash();
+        var identifyParams;
+        var success = false;
+
+        return $.Deferred(trySaveTask).promise();
+        function trySaveTask(deferred) {
+            pybossa.saveTask(idTask, {code: authHash.base64UrlHash})
+                    .done(function (taskRun) {
+                        identifyParams = {
+                            workerId: taskRun.user_id,
+                            idTask: idTask,
+                            code: authHash.random
+                        };
+                        deferred.resolve(identifyParams);
+                    }).fail(function () {
+                idTask += 1;
+                if (!success && idTask <= idTasks[idTasks.length - 1]) {
+                    trySaveTask(deferred);
+                } else {
+                    deferred.reject();
+                }
+            });
+        }
+    }
+
     pybossa.taskLoaded(function (task, deferred) {
         if (!$.isEmptyObject(task)) {
-            var returnTask = sessionStorage.returnTask;
-            if (task.info.type === "idTask" && sessionStorage.returnTask !== undefined) {
-                var authHash = CreativeCrowd.generateAuthHash();
-                pybossa.saveTask(task.id, {code:authHash.base64UrlHash}).done(function (taskRun) {
-                    sessionStorage.setItem("identifyParams", JSON.stringify({
-                        workerId: taskRun.user_id,
-                        idTask: task.id,
-                        code: authHash.random
-                    }));
-                    // return to prev task
-                    window.location.replace("http://localhost:5000/project/ccw/task/" + returnTask);
-                }).fail(function (status) {
-                    window.location.replace("http://localhost:5000/project/ccw/task/" + (task.id + 1));
-                });
-            } else {
-
-
-                deferred.resolve(task);
-            }
+            deferred.resolve(task);
         }
     });
 
     pybossa.presentTask(function (task, deferred) {
         if (!$.isEmptyObject(task)) {
-            CreativeCrowd.init(properties = {
-                workerServiceURL: "http://localhost:8080/",
-                platform: task.info.platform,
-                experiment: task.info.expID,
-                preview: false,
-                test: false
-            });
-
-            CreativeCrowd.onFinished(function (viewData, submittedData) {
-                pybossa.saveTask(task.id, answer).done(function () {
-                    deferred.resolve();
+            if (task.info.type === "experiment") {
+                CreativeCrowd.init(properties = {
+                    workerServiceURL: "http://localhost:8080/",
+                    platform: task.info.platform,
+                    experiment: task.info.expID,
+                    preview: false,
+                    test: false
                 });
-            });
+
+                CreativeCrowd.onFinished(function (viewData, submittedData) {
+                    pybossa.saveTask(task.id, answer).done(function () {
+                        deferred.resolve(task);
+                    });
+                });
 
 
-            CreativeCrowd.beforeIdentifyWorker(function () {
-                // 1 the first time this gets called identity param should be empty.
-                if (sessionStorage.getItem("identifyParams")) {
-                    var identifyParams = JSON.parse(sessionStorage.getItem("identifyParams"));
-                    sessionStorage.removeItem("identifyParams");
-                    // 2 the second time this is called, we have our params and can return them.
-                    return identifyParams;
-                }
-                // 1 so we redirect to an idtask
-                sessionStorage.setItem("returnTask", task.id);
-                window.location.replace("http://localhost:5000/project/ccw/task/" + task.info.idTasks[0]);
-            });
+                CreativeCrowd.beforeIdentifyWorker(function () {
+                    return doIdTask(task.info.idTasks);
+                });
 
-            CreativeCrowd.load();
+                CreativeCrowd.load();
+            }
         }
         else {
 //            $(".skeleton").hide();

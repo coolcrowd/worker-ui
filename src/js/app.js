@@ -34,51 +34,58 @@ CreativeCrowd = (function () {
                 + properties.experiment;
         }
 
-        var nextParams = properties.osParams;
-        if (worker !== NO_WORKER) {
-            nextParams.worker = worker;
-        }
-        if (skipAnswer) {
-            nextParams.answer = "skip";
-        }
-        if (skipRating) {
-            nextParams.rating = "skip";
-        }
-
-        return $.getJSON(nextUrl, nextParams, function (data, status) {
-            if (status === "success") {
-                extractWorkerId(data);
-                viewNext(data);
+        var nextParams = {};
+        return identifyWorker().then(function ( worker ) {
+            nextParams = properties.osParams;
+            if (worker !== NO_WORKER) {
+                nextParams.worker = worker;
             }
-        });
+            if (skipAnswer) {
+                nextParams.answer = "skip";
+            }
+            if (skipRating) {
+                nextParams.rating = "skip";
+            }
+        }).then(function () {
+                console.log("I run now!");
+                return $.getJSON(nextUrl, nextParams, function (data, status) {
+                    if (status === "success") {
+                        extractWorkerId(data);
+                        viewNext(data);
+                    }
+                })
+            }
+        );
     }
 
     function postSubmit(route, data) {
-        if (data.email && properties.osParams) {
-            route += "?";
-            var params = properties.osParams;
-            for (var key in params) {
-                if (params.hasOwnProperty(key)) {
-                    route += key + "=" + params[key] + "&";
+        return identifyWorker().then(function () {
+            if (data.email && properties.osParams) {
+                route += "?";
+                var params = properties.osParams;
+                for (var key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        route += key + "=" + params[key] + "&";
+                    }
                 }
+                route = route.substr(0, route.length - 1);
             }
-            route = route.substr(0, route.length - 1);
-        }
-        var jsonData = JSON.stringify(data);
-        console.log("POST: " + route + "\n" + jsonData);
-        return $.ajax({
-            method: "POST",
-            url: route,
-            contentType: "application/json",
-            // function to print all posted data
-            data: jsonData,
-
-            success: function (response, status, xhr) {
-                console.log("RESPONSE: " + status + "\n" + JSON.stringify(response, null, 4));
-                if (xhr.status === 201) {
-                    extractWorkerId(response);
-                }
-            }
+            var jsonData = JSON.stringify(data);
+            console.log("POST: " + route + "\n" + jsonData);
+            return jsonData;
+        }).then(function ( jsonData ) {
+            $.ajax({
+                method: "POST",
+                url: route,
+                contentType: "application/json",
+                // function to print all posted data
+                data: jsonData
+                }).done(function (response, status, xhr) {
+                    console.log("RESPONSE: " + status + "\n" + JSON.stringify(response, null, 4));
+                    if (xhr.status === 201) {
+                        extractWorkerId(response);
+                    }
+                });
         });
     }
 
@@ -143,6 +150,19 @@ CreativeCrowd = (function () {
         }
         return NO_WORKER;
     }
+
+    function identifyWorker() {
+        if (hooks.identifyWorker !== undefined && worker === NO_WORKER) {
+            return hooks.identifyWorker().then(function (params) {
+                    properties.osParams = params ? params : {};
+                    return NO_WORKER;
+                }
+            )
+        } else {
+            return $.Deferred().resolve(worker).promise();
+        }
+    }
+
 
 // -------------- Views -------------------
     var DefaultView = Ractive.extend({
@@ -227,15 +247,15 @@ CreativeCrowd = (function () {
                     this.set("toSubmit", radios);
                 }
             });
-        },    sort: function ( array, column ) {
-      array = array.slice(); // clone, so we don't modify the underlying data
+        }, sort: function (array, column) {
+            array = array.slice(); // clone, so we don't modify the underlying data
 
-      return array.sort( function ( a, b ) {
-        return a[ column ] < b[ column ] ? -1 : 1;
-      });
-    },
+            return array.sort(function (a, b) {
+                return a[column] < b[column] ? -1 : 1;
+            });
+        },
 
-        required: function ( calibrationId ) {
+        required: function (calibrationId) {
             return calibrations;
         },
 
@@ -421,7 +441,6 @@ CreativeCrowd = (function () {
                 post: postSubmit
             });
         }
-
     }
 
 // TODO make isolated
@@ -457,7 +476,11 @@ CreativeCrowd = (function () {
     }
 
     const NO_WORKER = "no_worker_set";
-    var properties;
+    var properties = {
+        preview: false,
+        test: false,
+        osParams: {}
+    };
     var worker = NO_WORKER;
     var skipAnswer = false;
     var skipRating = false;
@@ -478,9 +501,13 @@ CreativeCrowd = (function () {
         }
     }
 
-    function identifyWorker() {
-        if (hooks.identifyWorker !== undefined) {
-            properties.osParams = hooks.identifyWorker();
+    function initProperties( props ) {
+        if (props !== undefined) {
+            for (var key in props) {
+                if (props.hasOwnProperty(key)) {
+                    properties[key] = props[key];
+                }
+            }
         }
     }
 
@@ -491,7 +518,7 @@ CreativeCrowd = (function () {
          * @param props
          */
         init: function (props) {
-            properties = props;
+            initProperties(props);
             makeRoutes();
             this.currentViewType = "DEFAULT";
             $(document).ajaxError(function (event, request, settings, thrownError) {
@@ -533,7 +560,6 @@ CreativeCrowd = (function () {
             hooks.finished = call;
         },
 
-        // this needs to block to prevent errors resulting from async access to the ws
         beforeIdentifyWorker: function (call) {
             hooks.identifyWorker = call;
         },
@@ -544,13 +570,11 @@ CreativeCrowd = (function () {
         //starts loading the first "next view"
         load: function () {
             worker = loadWorker();
-            if (worker === NO_WORKER) {
-                identifyWorker();
-            }
             if (properties.FORCE_VIEW) {
                 properties.workerServiceURL = "/WorkerUI/resources/";
             }
             properties.preview === true ? viewPreview() : getNext();
+
         }
     }
 })();
