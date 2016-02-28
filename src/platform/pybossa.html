@@ -39,7 +39,7 @@
         if (!$.isEmptyObject(task)) {
             if (task.info.type === "experiment") {
                 CreativeCrowd.init(properties = {
-                    workerServiceURL: "http://localhost:8080/",
+                    workerServiceURL: task.info.url,
                     platform: task.info.platform,
                     experiment: task.info.expID,
                     preview: false,

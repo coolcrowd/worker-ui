@@ -494,6 +494,11 @@ CreativeCrowd = (function () {
     };
 
     function makeRoutes() {
+        // ensure trailing slash
+        if (properties.workerServiceURL.charAt(properties.workerServiceURL.length - 1) !== "/") {
+            properties.workerServiceURL += "/";
+        }
+
         for (var key in routes) {
             if (routes.hasOwnProperty(key)) {
                 routes[key] = properties.workerServiceURL + routes[key];
