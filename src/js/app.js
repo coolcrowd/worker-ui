@@ -187,7 +187,7 @@ CreativeCrowd = (function () {
                     postSubmit(routes.email + properties.platform, toSubmit)
                         .done(function () {
                             ractive.fire("submitEmail", ractive.get(), toSubmit);
-                            ractive.fire("next");
+                            getNext()
                         });
                 },
 
@@ -233,7 +233,7 @@ CreativeCrowd = (function () {
                     if (this.requireAllRadios() === null) {
                         multipleSubmit(routes.calibration + worker, toSubmit).done(function () {
                             ractive.fire("submitCalibration", ractive.get(), toSubmit);
-                            ractive.fire("next");
+                            getNext()
                         });
                     }
                 },
@@ -279,7 +279,7 @@ CreativeCrowd = (function () {
                         ractive.fire("submitAnswer", ractive.get(), toSubmit);
                         // clear answer text field
                         ractive.set("toSubmit.answer", "");
-                        ractive.fire("next");
+                        getNext()
                     });
                 },
 
@@ -310,7 +310,7 @@ CreativeCrowd = (function () {
                     if (toSubmit !== null) {
                         multipleSubmit(routes.rating + worker, toSubmit).done(function () {
                             ractive.fire("submitRating", ractive.get(), toSubmit);
-                            ractive.fire("next");
+                            getNext()
                         });
                     }
                 },
@@ -435,11 +435,6 @@ CreativeCrowd = (function () {
             currentViewType = next["type"];
 
             registerHooks();
-
-            ractive.on({
-                next: getNext,
-                post: postSubmit
-            });
         }
     }
 
