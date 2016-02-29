@@ -127,26 +127,26 @@ CreativeCrowd = (function () {
 
     function persistWorker(workerToSet) {
         if (typeof(Storage) !== "undefined") {
-            // Code for localStorage/sessionStorage.
-            localStorage.worker = workerToSet;
+            // Code for sessionStorage/sessionStorage.
+            sessionStorage.worker = workerToSet;
             console.log("Persisted worker: " + worker);
         } else {
-            console.log("No localstorage available! Couldn't persist worker.");
+            console.log("No sessionStorage available! Couldn't persist worker.");
         }
     }
 
     function loadWorker() {
         if (typeof(Storage) !== "undefined") {
-            // Code for localStorage/sessionStorage.
-            if (localStorage.getItem("worker")) {
-                worker = localStorage.getItem("worker");
+            // Code for sessionStorage/sessionStorage.
+            if (sessionStorage.getItem("worker")) {
+                worker = sessionStorage.getItem("worker");
                 console.log("Loaded worker: " + worker);
                 return worker;
             } else {
                 console.log("No worker persisted.");
             }
         } else {
-            console.log("No localstorage available! Couldn't load worker.");
+            console.log("No sessionStorage available! Couldn't load worker.");
         }
         return NO_WORKER;
     }
