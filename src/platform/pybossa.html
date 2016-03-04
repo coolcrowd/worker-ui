@@ -47,7 +47,7 @@
                 });
 
                 WorkerUI.onFinished(function (viewData, submittedData) {
-                    pybossa.saveTask(task.id, answer).done(function () {
+                    pybossa.saveTask(task.id, viewData).done(function () {
                         deferred.resolve(task);
                     });
                 });

@@ -174,6 +174,10 @@ WorkerUI = (function () {
 
         partials: {
             experimentHeader: require("../templates/experimentHeaderPartial.html")
+        },
+
+        onconfig: function() {
+            registerHooks(this);
         }
     });
 
@@ -387,8 +391,9 @@ WorkerUI = (function () {
             var i = 0;
             this.on("next", function () {
                 this.set("nono", nono[i++ % 3]);
-                this.fire("submitFinished");
-            })
+            });
+
+            this.fire("finished");
         }
     });
 
@@ -431,10 +436,8 @@ WorkerUI = (function () {
                 default:
                     console.log("Unknown type: " + next["type"])
             }
-
             currentViewType = next["type"];
 
-            registerHooks();
         }
     }
 
@@ -448,7 +451,7 @@ WorkerUI = (function () {
 
     var hooks = {};
 
-    function registerHooks() {
+    function registerHooks( ractive ) {
         // how can this be done cleaner?
         if (hooks.any !== undefined) {
             ractive.on("submit", hooks.any);
@@ -466,7 +469,7 @@ WorkerUI = (function () {
             ractive.on("submitRating", hooks.rating);
         }
         if (hooks.finished !== undefined) {
-            ractive.on("submitFinished", hooks.finished);
+            ractive.on("finished", hooks.finished);
         }
     }
 
