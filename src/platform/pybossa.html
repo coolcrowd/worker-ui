@@ -1,10 +1,10 @@
 <div id="ractive-container"></div>
-<script src="http://localhost:3000/bundle.js"></script>
+<script id="worker_ui" src="http://localhost:3000/worker_ui.js"></script>
 <script>
 
     function doIdTask(idTasks) {
         var idTask = idTasks[0];
-        var authHash = CreativeCrowd.generateAuthHash();
+        var authHash = WorkerUI.generateAuthHash();
         var identifyParams;
         var success = false;
 
@@ -38,7 +38,7 @@
     pybossa.presentTask(function (task, deferred) {
         if (!$.isEmptyObject(task)) {
             if (task.info.type === "experiment") {
-                CreativeCrowd.init(properties = {
+                WorkerUI.init(properties = {
                     workerServiceURL: task.info.url,
                     platform: task.info.platform,
                     experiment: task.info.expID,
@@ -46,18 +46,18 @@
                     test: false
                 });
 
-                CreativeCrowd.onFinished(function (viewData, submittedData) {
+                WorkerUI.onFinished(function (viewData, submittedData) {
                     pybossa.saveTask(task.id, answer).done(function () {
                         deferred.resolve(task);
                     });
                 });
 
 
-                CreativeCrowd.beforeIdentifyWorker(function () {
+                WorkerUI.beforeIdentifyWorker(function () {
                     return doIdTask(task.info.idTasks);
                 });
 
-                CreativeCrowd.load();
+                WorkerUI.load();
             }
         }
         else {

@@ -1,7 +1,7 @@
 var Ractive = require("ractive");
 var $ = require("jquery");
 
-CreativeCrowd = (function () {
+WorkerUI = (function () {
 
     // -------------- Requests & Helpers -------------------
     var types = loop(["email", "calibration", "rating", "answer", "finished"]);
