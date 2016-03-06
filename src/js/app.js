@@ -357,7 +357,7 @@ WorkerUI = (function () {
              */
             var answersToRate = this.get("answersToRate");
             var toSubmit = [];
-            var experiment = parent.properties.experiment;
+            var experiment = properties.experiment;
             var ratings = this.get("toSubmit.ratings");
             var feedback = this.get("toSubmit.feedback");
             var ratedAnswer;
@@ -367,7 +367,7 @@ WorkerUI = (function () {
                 ratedAnswer = {};
                 ratedAnswer.ratingId = ratingId;
                 if (rating !== undefined) {
-                    ratedAnswer.rating = rating;
+                    ratedAnswer.rating = parseInt(rating);
                 } else {
                     requireCallback(ratingId);
                     return null;
