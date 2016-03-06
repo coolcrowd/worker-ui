@@ -13,7 +13,7 @@
 </body>
 
 <script>
-    CreativeCrowd.init(properties = {
+    WorkerUI.init(properties = {
         workerServiceURL: "https://worker.pse.kelunik.com/",
         // those params will be passed to the crowdplatform implementaion in the object service
         osParams: {
@@ -23,18 +23,18 @@
         platform: "dummydummy",
         experiment: 11,
         preview: false,
-        FORCE_VIEW: 3
+        FORCE_VIEW: 2
     });
 
-    CreativeCrowd.load();
-    CreativeCrowd.onSubmitAnswer(function (viewData, submittedData) {
+    WorkerUI.load();
+    WorkerUI.onSubmitAnswer(function (viewData, submittedData) {
         console.log("viewData: \n" + JSON.stringify(viewData, null, 4));
         console.log("submittedData: \n" + JSON.stringify(submittedData, null, 4));
     });
-    CreativeCrowd.onSubmitCalibration(function (data) {
+    WorkerUI.onSubmitCalibration(function (data) {
         //console.log("calibration submitted" + JSON.stringify(data));
     });
-    CreativeCrowd.onSubmitAny(function () {
+    WorkerUI.onSubmitAny(function () {
         //console.log("Something was submitted");
     })
 </script>

@@ -1,41 +1,64 @@
 <div id="ractive-container"></div>
-<script src="https://worker.pse.kelunik.com/ui/bundle.js"></script>
+<script id="worker_ui" src="/worker_ui.js"></script>
 <script>
+
+    function doIdTask(idTasks) {
+        var idTask = idTasks[0];
+        var authHash = WorkerUI.generateAuthHash();
+        var identifyParams;
+        var success = false;
+
+        return $.Deferred(trySaveTask).promise();
+        function trySaveTask(deferred) {
+            pybossa.saveTask(idTask, {code: authHash.base64UrlHash})
+                    .done(function (taskRun) {
+                        identifyParams = {
+                            workerId: taskRun.user_id,
+                            idTask: idTask,
+                            code: authHash.random
+                        };
+                        deferred.resolve(identifyParams);
+                    }).fail(function () {
+                idTask += 1;
+                if (!success && idTask <= idTasks[idTasks.length - 1]) {
+                    trySaveTask(deferred);
+                } else {
+                    deferred.reject();
+                }
+            });
+        }
+    }
+
     pybossa.taskLoaded(function (task, deferred) {
         if (!$.isEmptyObject(task)) {
-            CreativeCrowd.init(properties = {
-                workerServiceURL: "https://worker.pse.kelunik.com/",
-                // those params will be passed to the crowdplatform implementaion in the object service
-                osParams: {
-                    workerId: 121,
-                    assignmentId: 1234
-                },
-                platform: task.info.platformName,
-                experiment: task.info.expID,
-                preview: false,
-                test: false
-            });
-
-            CreativeCrowd.onFinished(function (viewData, submittedData) {
-                pybossa.saveTask(task.id, answer).done(function () {
-                    deferred.resolve();
-                });
-            });
-
-            CreativeCrowd.beforeIdentifyWorker(function () {
-                var code = generateCode();
-                pybossa.saveTask(task.info.idTask[0], code).done(function () {
-
-                });
-            });
-
+            deferred.resolve(task);
         }
-        deferred.resolve(task);
     });
 
     pybossa.presentTask(function (task, deferred) {
         if (!$.isEmptyObject(task)) {
-            CreativeCrowd.load();
+            if (task.info.type === "experiment") {
+                WorkerUI.init(properties = {
+                    workerServiceURL: task.info.url,
+                    platform: task.info.platform,
+                    experiment: task.info.expID,
+                    preview: false,
+                    test: false
+                });
+
+                WorkerUI.onFinished(function (viewData, submittedData) {
+                    pybossa.saveTask(task.id, viewData).done(function () {
+                        deferred.resolve(task);
+                    });
+                });
+
+
+                WorkerUI.beforeIdentifyWorker(function () {
+                    return doIdTask(task.info.idTasks);
+                });
+
+                WorkerUI.load();
+            }
         }
         else {
 //            $(".skeleton").hide();
@@ -44,13 +67,7 @@
         }
     });
 
-    // this generates a random code with 10 characters in [a-zA-Z0-9]
-    function generateCode() {
-        var s = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        return Array.apply(null, new Array(10)).map(function () {
-            return s.charAt(Math.floor(Math.random() * s.length));
-        }).join('');
-    }
-
     pybossa.run('ccw');
+
+
 </script>

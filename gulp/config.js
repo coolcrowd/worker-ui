@@ -37,14 +37,14 @@ module.exports = {
         dest: dest + "/img"
     },
     markup: {
-        src: src + "/{index.html,favicon.ico}",
+        src: src + "/{index.html,favicon.ico,/platform/**}",
         dest: dest
     },
     browserify: {
         bundleConfigs: [{
             entries: src + '/js/app.js',
             dest: dest,
-            outputName: 'bundle.js',
+            outputName: 'worker_ui.js',
             extensions: [],
             transform: ["ractivate"]
         }]
