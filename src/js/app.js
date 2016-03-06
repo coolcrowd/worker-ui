@@ -74,7 +74,7 @@ WorkerUI = (function () {
             console.log("POST: " + route + "\n" + jsonData);
             return jsonData;
         }).then(function ( jsonData ) {
-            $.ajax({
+            return $.ajax({
                 method: "POST",
                 url: route,
                 contentType: "application/json",
@@ -332,7 +332,7 @@ WorkerUI = (function () {
 
                     var ratings = this.findAll('input[type="radio"]:checked').reduce(
                         function (previousRatings, radio, index, array) {
-                            var rating = radio.value;
+                            var rating = parseInt(radio.value);
                             // the rating id is stored in the id attribute that looks for example like
                             // id="12-ratingId-0-1" the first number is the ratingId
                             var ratingId = radio.id.split("-", 1)[0].toString();

@@ -12,7 +12,6 @@ COPY src /src
 COPY resources /resources
 COPY lib /lib
 COPY gulp /gulp
-COPY base.html /base.html
 COPY gulpfile.js /gulpfile.js
 COPY package.json /package.json
 RUN npm config set registry http://registry.npmjs.org/
