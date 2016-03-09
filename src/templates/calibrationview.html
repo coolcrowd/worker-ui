@@ -1,15 +1,14 @@
 <div id="calibrations">
-    {{#each calibrations :i}}
-    <div id="calibration-{{i}}">
+    {{#each calibrations:i}}
+    <div id="calibration-{{i}}" class='{{ calibrations[i].required ? "required" : ""}}'>
         <span>{{question}}</span>
         <div>
-            {{# answerOptions : j}}
+            {{#each answerOptions:j}}
             <label>
-                <input on-change="radioChange" type="radio" style='{{ required(calibrations[i].id) ? "required" : ""}}'
-                       name="options-{{i}}" id="{{i}}-{{j}}" value={{id}}>
+                <input type="radio" name="{{~/toSubmit.answerOptions[i]}}" id="{{calibrations[i].id}}-calibrationId-{{i}}-{{j}}" value={{id}}>
                 {{option}}
             </label>
-            {{/}}
+            {{/each}}
         </div>
     </div>
     {{/each}}

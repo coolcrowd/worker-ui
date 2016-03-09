@@ -1,6 +1,6 @@
 <div id="ratings">
     {{>experimentHeader}}
-    {{#answersToRate:i}}
+    {{#each answersToRate:i}}
     <div id="ratingId-{{id}}">
         <div id="answer-container">
             {{answer}}
@@ -29,7 +29,7 @@
         </div>
         <textarea name="feedback" placeholder="Write a feedback for the author! (optional)" value="{{toSubmit.feedbacks[i]}}"></textarea>
     </div>
-    {{/answersToRate}}
+    {{/each answersToRate}}
 </div>
 <button on-click="submit">Hand in!</button>
 {{#if skipAllowed}}

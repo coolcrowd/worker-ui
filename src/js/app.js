@@ -230,50 +230,46 @@ WorkerUI = (function () {
         template: require("../templates/calibrationview.html"),
 
         oninit: function () {
+            // initialize calibrations[i].required
             var calibrations = this.get("calibrations");
-            for (var calibs in calibrations) {
-
+            for (var i = 0; i < calibrations.length; i++) {
+                calibrations[i].required = false;
             }
-            var required = new Array(calibrations.length);
-            required[0] = true;
-            this.set("required", required);
+            this.set("calibrations", calibrations);
 
             this.on({
                 submit: function () {
-                    var toSubmit = this.get("toSubmit");
-                    if (this.requireAllRadios() === null) {
+                    var toSubmit = this.parseCalibrations();
+                    if (toSubmit !== null && toSubmit.length > 0) {
                         multipleSubmit(routes.calibration + worker, toSubmit).done(function () {
                             ractive.fire("submitCalibration", ractive.get(), toSubmit);
                             getNext()
                         });
                     }
-                },
-
-                radioChange: function () {
-                    var radios = this.findAll('input[type="radio"]:checked').map(function (radio) {
-                        return {
-                            answerOption: radio.value
-                        };
-                    });
-                    this.set("toSubmit", radios);
                 }
             });
         },
 
-        sort: function (array, column) {
-            array = array.slice(); // clone, so we don't modify the underlying data
-
-            return array.sort(function (a, b) {
-                return a[column] < b[column] ? -1 : 1;
-            });
-        },
-
-        required: function (calibrationId) {
-            return true;
-        },
-
-        requireAllRadios: function () {
-
+        /**
+         * Parses ratings from the view and marks missing values.
+         * @returns {Array}
+         */
+        parseCalibrations: function() {
+            var toSubmit = [];
+            var calibrations = ractive.get("calibrations");
+            var answerOptions = ractive.get("toSubmit.answerOptions");
+            var calibration;
+            for (var i = 0; i < calibrations.length; i++) {
+                if (answerOptions === undefined || answerOptions[i] === undefined) {
+                    // mark missing calibration
+                    ractive.set("calibrations[" + i + "].required", true);
+                } else {
+                    calibration = {};
+                    calibration.answerOption = parseInt(answerOptions[i]);
+                    toSubmit.push(calibration);
+                }
+            }
+            return toSubmit;
         }
     });
 
@@ -357,6 +353,7 @@ WorkerUI = (function () {
             var ratedAnswer;
             for (var i = 0; i < answersToRate.length; i++) {
                 if (ratings === undefined || ratings[i] === undefined) {
+                    // mark missing rating
                     ractive.set("answersToRate[" + i + "].required", true);
                 } else {
                     ratedAnswer = {};
@@ -365,7 +362,7 @@ WorkerUI = (function () {
                     ratedAnswer.experiment = experiment;
                     ratedAnswer.answerId = answersToRate[i].answerId;
                     ratedAnswer.feedback = feedbacks[i];
-                    ratedAnswer.constraint = constraints[i];
+                    ratedAnswer.constraints = constraints[i];
                     toSubmit.push(ratedAnswer);
                 }
             }
