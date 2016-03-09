@@ -2,9 +2,11 @@ var Ractive = require("ractive");
 var $ = require("jquery");
 
 WorkerUI = (function () {
+    // disable debug mode when minified
+    Ractive.DEBUG = /unminified/.test(function(){/*unminified*/});
 
     // -------------- Requests & Helpers -------------------
-    var types = loop(["email", "calibration", "rating", "answer", "finished"]);
+    var types = loop(["email", "calibration", "answer", "rating", "finished"]);
     const EMAIL = 1;
     const CALIBRATION = 2;
     const RATING = 3;
@@ -74,18 +76,22 @@ WorkerUI = (function () {
             console.log("POST: " + route + "\n" + jsonData);
             return jsonData;
         }).then(function ( jsonData ) {
-            return $.ajax({
-                method: "POST",
-                url: route,
-                contentType: "application/json",
-                // function to print all posted data
-                data: jsonData
+            if (properties.NO_POST) {
+                return $.Deferred().resolve();
+            } else {
+                return $.ajax({
+                    method: "POST",
+                    url: route,
+                    contentType: "application/json",
+                    // function to print all posted data
+                    data: jsonData
                 }).done(function (response, status, xhr) {
                     console.log("RESPONSE: " + status + "\n" + JSON.stringify(response, null, 4));
                     if (xhr.status === 201) {
                         extractWorkerId(response);
                     }
                 });
+            }
         });
     }
 
@@ -251,7 +257,9 @@ WorkerUI = (function () {
                     this.set("toSubmit", radios);
                 }
             });
-        }, sort: function (array, column) {
+        },
+
+        sort: function (array, column) {
             array = array.slice(); // clone, so we don't modify the underlying data
 
             return array.sort(function (a, b) {
@@ -260,7 +268,7 @@ WorkerUI = (function () {
         },
 
         required: function (calibrationId) {
-            return calibrations;
+            return true;
         },
 
         requireAllRadios: function () {

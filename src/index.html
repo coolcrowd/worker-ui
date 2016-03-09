@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <title>WorkerUI Example</title>
-    <!--- <link rel="stylesheet" href="/app.css" /> --->
+    <!-- <link rel="stylesheet" href="/app.css" /> -->
 </head>
 
 <body>
@@ -20,30 +20,37 @@
 
         // optional
         preview: false,
-        FORCE_VIEW: 2,
+        // this will force the answer view
+        FORCE_VIEW: 3,
+        // this will skip posts
+        NO_POST: true,
         // these params will be passed to the crowdplatform implementaion in the object service (optional)
         osParams: {
             workerId: 121,
             assignmentId: 1234
         }
     });
-    WorkerUI.onSubmitEmail(function (viewData, submittedData){
+    WorkerUI.onSubmitEmail(function (viewData, submittedData) {
 
     });
     WorkerUI.onSubmitCalibration(function (viewData, submittedData) {
         console.log("calibration submitted" + JSON.stringify(submittedData));
     });
+    var answerArray = [];
     WorkerUI.onSubmitAnswer(function (viewData, submittedData) {
+        answerArray.push(submittedData.answer);
         console.log("viewData: \n" + JSON.stringify(viewData, null, 4));
         console.log("submittedData: \n" + JSON.stringify(submittedData, null, 4));
     });
-    WorkerUI.onSubmitRating(function (viewData, submittedData){
+    WorkerUI.onSubmitRating(function (viewData, submittedData) {
 
     });
     WorkerUI.onSubmitAny(function (viewData, submittedData) {
         console.log("Something was submitted");
     });
-    WorkerUI.onFinished();
+    WorkerUI.onFinished(function () {
+
+    });
 
 
     WorkerUI.load();
