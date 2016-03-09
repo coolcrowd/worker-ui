@@ -3,7 +3,8 @@ var $ = require("jquery");
 
 WorkerUI = (function () {
     // disable debug mode when minified
-    Ractive.DEBUG = /unminified/.test(function(){/*unminified*/});
+    Ractive.DEBUG = /unminified/.test(function () {/*unminified*/
+    });
 
     // -------------- Requests & Helpers -------------------
     var types = loop(["email", "calibration", "answer", "rating", "finished"]);
@@ -37,7 +38,7 @@ WorkerUI = (function () {
         }
 
         var nextParams = {};
-        return identifyWorker().then(function ( worker ) {
+        return identifyWorker().then(function (worker) {
             nextParams = properties.osParams;
             if (worker !== NO_WORKER) {
                 nextParams.worker = worker;
@@ -75,7 +76,7 @@ WorkerUI = (function () {
             var jsonData = JSON.stringify(data);
             console.log("POST: " + route + "\n" + jsonData);
             return jsonData;
-        }).then(function ( jsonData ) {
+        }).then(function (jsonData) {
             if (properties.NO_POST) {
                 return $.Deferred().resolve();
             } else {
@@ -182,7 +183,7 @@ WorkerUI = (function () {
             experimentHeader: require("../templates/experimentHeaderPartial.html")
         },
 
-        onconfig: function() {
+        onconfig: function () {
             registerHooks(this);
         }
     });
@@ -308,18 +309,26 @@ WorkerUI = (function () {
         template: require("../templates/ratingview.html"),
 
         oninit: function () {
-            //appendRatingId();
-
             // if answers were skipped dont allow skip ratings
             this.set("skipAllowed", !skipAnswer);
+
+            // initialize answersToRate[i].required
+            var answersToRate = this.get("answersToRate");
+            var ratings = [];
+            for (var i = 0; i < answersToRate.length; i++) {
+                answersToRate[i].required = false;
+                ratings.push(null);
+            }
+            this.set("answersToRate", answersToRate);
+            this.set("toSubmit.ratings", ratings);
+
+            // register events
             this.on({
                 submit: function () {
                     var toSubmit;
-                    toSubmit = this.parseRatings(function (requiredRating) {
-                        ractive.set("answersToRate[requiredRating]", true);
-                    });
 
-                    if (toSubmit !== null) {
+                    toSubmit = this.parseRatings();
+                    if (toSubmit !== null && toSubmit.length > 0) {
                         multipleSubmit(routes.rating + worker, toSubmit).done(function () {
                             ractive.fire("submitRating", ractive.get(), toSubmit);
                             getNext()
@@ -330,60 +339,35 @@ WorkerUI = (function () {
                 skip: function () {
                     skipRating = true;
                     this.fire("next");
-                },
-
-                radioChange: function () {
-                    var previousRatings = ractive.get("toSubmit.ratings");
-                    if (previousRatings === undefined) {
-                        previousRatings = {};
-                    }
-
-                    var ratings = this.findAll('input[type="radio"]:checked').reduce(
-                        function (previousRatings, radio, index, array) {
-                            var rating = parseInt(radio.value);
-                            // the rating id is stored in the id attribute that looks for example like
-                            // id="12-ratingId-0-1" the first number is the ratingId
-                            var ratingId = radio.id.split("-", 1)[0].toString();
-                            // return object with ratingId as key for rating
-                            previousRatings[ratingId] = rating;
-                            return previousRatings;
-                        }, previousRatings);
-                    this.set("toSubmit.ratings", ratings);
                 }
             });
         },
 
-        parseRatings: function (requireCallback) {
-            /**
-             * As array
-             * ratingId
-             * rating = value of ratingOptions
-             * experiment
-             * answerId
-             * feedback
-             * constraints
-             */
-            var answersToRate = this.get("answersToRate");
+        /**
+         * Parses ratings from the view and marks missing values.
+         * @returns {Array}
+         */
+        parseRatings: function () {
             var toSubmit = [];
+            var answersToRate = this.get("answersToRate");
             var experiment = properties.experiment;
             var ratings = this.get("toSubmit.ratings");
-            var feedback = this.get("toSubmit.feedback");
+            var feedbacks = this.get("toSubmit.feedbacks");
+            var constraints = this.get("toSubmit.constraints");
             var ratedAnswer;
             for (var i = 0; i < answersToRate.length; i++) {
-                var ratingId = answersToRate[i].id;
-                var rating = ratings[ratingId.toString()];
-                ratedAnswer = {};
-                ratedAnswer.ratingId = ratingId;
-                if (rating !== undefined) {
-                    ratedAnswer.rating = parseInt(rating);
+                if (ratings === undefined || ratings[i] === undefined) {
+                    ractive.set("answersToRate[" + i + "].required", true);
                 } else {
-                    requireCallback(ratingId);
-                    return null;
+                    ratedAnswer = {};
+                    ratedAnswer.rating = parseInt(ratings[i]);
+                    ratedAnswer.ratingId = answersToRate[i].id;
+                    ratedAnswer.experiment = experiment;
+                    ratedAnswer.answerId = answersToRate[i].answerId;
+                    ratedAnswer.feedback = feedbacks[i];
+                    ratedAnswer.constraint = constraints[i];
+                    toSubmit.push(ratedAnswer);
                 }
-                ratedAnswer.experiment = experiment;
-                ratedAnswer.answerId = answersToRate[i].answerId;
-                ratedAnswer.feedback = feedback[i];
-                toSubmit.push(ratedAnswer);
             }
             return toSubmit;
         }
@@ -459,7 +443,7 @@ WorkerUI = (function () {
 
     var hooks = {};
 
-    function registerHooks( ractive ) {
+    function registerHooks(ractive) {
         // how can this be done cleaner?
         if (hooks.any !== undefined) {
             ractive.on("submit", hooks.any);
@@ -512,7 +496,7 @@ WorkerUI = (function () {
         }
     }
 
-    function initProperties( props ) {
+    function initProperties(props) {
         if (props !== undefined) {
             for (var key in props) {
                 if (props.hasOwnProperty(key)) {

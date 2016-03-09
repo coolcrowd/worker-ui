@@ -5,11 +5,11 @@
         <div id="answer-container">
             {{answer}}
         </div>
-        <div id="rating-options-{{answersToRate[i].id}}" class="{{.required}}">
+        <div id="rating-options-{{answersToRate[i].id}}" class='{{ answersToRate[i].required ? "required" : "" }}' >
             <span>Please rate!</span>
             {{#each ratingOptions:j}}
             <label>
-                <input on-change="radioChange" type="radio" name="options-{{i}}" id="{{answersToRate[i].id}}-ratingId-{{i}}-{{j}}" value={{value}}>
+                <input type="radio" name="{{~/toSubmit.ratings[i]}}" id="{{answersToRate[i].id}}-ratingId-{{i}}-{{j}}" value={{value}}>
                 {{description}}
             </label>
             {{/each}}
@@ -21,14 +21,13 @@
             </span><br>
                 {{#each constraints:j}}
                 <label>
-                    <input on-change="checkboxChange" type="checkbox" name="{{~/toSubmit.constraints[i]}}"
-                           id="{{answersToRate[i].id}}-calibrationId-{{i}}-{{j}}" value="{{id}}">
+                    <input type="checkbox" name="{{~/toSubmit.constraints[i]}}" id="{{answersToRate[i].id}}-calibrationId-{{i}}-{{j}}" value="{{id}}">
                     {{name}}
                 </label>
                 {{/each}}
 
         </div>
-        <textarea name="feedback" placeholder="Write a feedback for the author! (optional)" value="{{toSubmit.feedback[i]}}"></textarea>
+        <textarea name="feedback" placeholder="Write a feedback for the author! (optional)" value="{{toSubmit.feedbacks[i]}}"></textarea>
     </div>
     {{/answersToRate}}
 </div>
