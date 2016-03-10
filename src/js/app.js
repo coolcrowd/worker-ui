@@ -175,10 +175,6 @@ WorkerUI = (function () {
     var DefaultView = Ractive.extend({
         el: "#ractive-container",
 
-        logToSubmit: function () {
-            console.log(JSON.stringify(this.get("toSubmit"), null, 4));
-        },
-
         partials: {
             experimentHeader: require("../templates/experimentHeaderPartial.html")
         },
@@ -194,7 +190,7 @@ WorkerUI = (function () {
         oninit: function () {
             this.on({
                 submit: function () {
-                    toSubmit = this.get("toSubmit");
+                    var toSubmit = this.get("toSubmit");
                     postSubmit(routes.email + properties.platform, toSubmit)
                         .done(function () {
                             ractive.fire("submitEmail", ractive.get(), toSubmit);
@@ -368,8 +364,6 @@ WorkerUI = (function () {
             }
             return toSubmit;
         }
-
-
     });
 
     var FinishedView = DefaultView.extend({

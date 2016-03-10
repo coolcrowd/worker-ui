@@ -10,10 +10,22 @@
         </ul>
         {{/each}}
     </div>
+    {{#if answerType === "images"}}
+    <div>
+        <textarea name="answer" value="{{toSubmit.answer}}" placeholder="Enter your image url here!"></textarea>
+    </div>
+    <div id="answer-image">
+        <div class="image"
+             style="background-image: url('{{toSubmit.answer}}');
+                    height: 200px;">
+        </div>
+    </div>
+    {{else}}
     <div>
         <textarea name="answer" value="{{toSubmit.answer}}" placeholder="Enter your answer here!"></textarea>
     </div>
-    {{#if answerType === "images"}}
+    {{/if}}
+
     <div id="images">
         {{#each pictures}}
         <div class="image"
@@ -23,7 +35,7 @@
         <label>{{urlLicense}}</label>
         {{/each}}
     </div>
-    {{/if}}
+
     {{#if !isPreview}}
     <span>You can hand in <b>{{maxAnswersToGive}}</b> more answers!</span>
     <button on-click="submit">Hand in!</button>

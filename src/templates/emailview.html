@@ -1,7 +1,12 @@
 <div id="email">
-    <input on-focus="focus" placeholder="Enter your email" value="{{toSubmit.email}}">
+    <p>
+        For participating in some of our experiments you will receive a payment in amazon gift codes.
+        Furthermore, your answers will be rated by other crowd workers.
+        To send you feedback and gift codes we need your email address.
+    </p>
+    <input on-focus="focus" placeholder="Enter your email address" value="{{toSubmit.email}}">
     <button on-click="submit" {{valid ? "" : "disabled"}}>Send!</button>
     {{#if !valid}}
-    <div class="validation-error">This is not a valid mail address.</div>
+    <div class="validation-error">This is not a valid email address.</div>
     {{/if}}
 </div>
