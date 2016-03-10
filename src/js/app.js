@@ -126,6 +126,8 @@ CreativeCrowd = (function () {
     var DefaultView = Ractive.extend({
         el: "#ractive-container",
 
+        css: require("../../build/screen.css"),
+
         logToSubmit: function () {
             console.log(JSON.stringify(this.get("toSubmit"), null, 4));
         },

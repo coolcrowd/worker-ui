@@ -46,7 +46,7 @@ module.exports = {
             dest: dest,
             outputName: 'bundle.js',
             extensions: [],
-            transform: ["ractivate"]
+            transform: ["modcss", "ractivate"]
         }]
     },
     production: {
