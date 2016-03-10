@@ -1,0 +1,136 @@
+.wizard label input[type="checkbox"] {
+  transform: translateY(3px);
+  margin: 4px 8px;
+}
+
+.wizard input[type="text"] {
+  display: block;
+  margin: 8px 0;
+  padding: 0 8px;
+  line-height: 30px;
+  width: 100%;
+  border: 1px solid rgba(0,0,0,.15);
+}
+
+.wizard textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 150px;
+  padding: 8px;
+  border: 1px solid rgba(0,0,0,.15);
+}
+
+.wizard .placeholders {
+  margin: 10px 25px;
+  padding: 0;
+}
+
+.wizard .placeholder {
+  margin: 15px 0;
+}
+
+.wizard .placeholder-type {
+  display: inline-block;
+  background-color: #ddd;
+  border-bottom: 1px solid rgba(0,0,0,.1);
+  padding: 2px 6px;
+  font-weight: bold;
+  margin: 0 10px;
+  transform: translateY(-2px);
+}
+
+.input-help {
+  margin: 4px 0 10px 0;
+  color: #666;
+  font-size: 90%;
+}
+
+.wizard input[type="number"] {
+  width: 100px;
+  display: inline-block;
+  margin: 8px 0;
+  padding: 0 8px;
+  line-height: 30px;
+  border: 1px solid rgba(0,0,0,.15);
+  text-align: right;
+}
+
+.input-unit {
+  font-weight: bold;
+  display: inline-block;
+  margin: 3px 15px;
+}
+
+.platform-inactive {
+  color: #888;
+}
+
+.platform h4 {
+  font-size: 16px;
+  display: inline-block;
+}
+
+.platform input[type="checkbox"] {
+  margin: 4px;
+}
+
+.platform-name input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 8px 8px 8px 0;
+  vertical-align:  middle;
+  transform: translateY(-2px);
+}
+
+.restrictions {
+  display: block !important;
+  margin-left: 26px;
+}
+
+.restriction {
+  padding: 5px 8px;
+}
+
+.restrictions h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.restriction-name {
+  font-weight: bold;
+}
+
+.restriction-answers {
+  padding: 8px;
+}
+
+.restriction label {
+  display: inline-block;
+  margin: 8px;
+}
+
+.radio-option {
+  padding: 4px;
+  display: block;
+}
+
+.radio-option input[type="radio"] {
+  margin: 4px 8px;
+  float: left;
+}
+
+.radio-option > span {
+  padding-left: 30px;
+  display: block;
+}
+
+.restriction-list-item {
+  margin: 0 -20px !important;
+  display: block !important;
+  width: auto !important;
+  cursor: pointer;
+}
+
+.restriction-list-item:hover {
+  background: rgba(0,0,0,.05);
+}

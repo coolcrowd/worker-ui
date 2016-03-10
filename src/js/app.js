@@ -175,6 +175,8 @@ WorkerUI = (function () {
     var DefaultView = Ractive.extend({
         el: "#ractive-container",
 
+        css: require("../../build/screen.css"),
+
         partials: {
             experimentHeader: require("../templates/experimentHeaderPartial.html")
         },

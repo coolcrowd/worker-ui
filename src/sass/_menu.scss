@@ -1,0 +1,152 @@
+.menu {
+  background: #eee;
+  padding: 0 20px;
+  line-height: 30px;
+  box-shadow: 0 -2px 0 0 rgba(0,0,0,.1) inset;
+}
+
+.menu h2 {
+  font-size: inherit;
+  display: inline-block;
+  vertical-align: top;
+  padding: 0;
+  margin: 0;
+}
+
+.menu h2 a {
+  line-height: 24px;
+  padding: 13px 20px 13px 20px;
+}
+
+.menu-logo {
+  vertical-align: top;
+}
+
+.menu ul {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+}
+
+.menu li {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+}
+
+.menu a {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 16px;
+  color: #777;
+  text-decoration: none;
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  line-height: 30px;
+}
+
+.menu a:hover, .menu a.selected {
+  border-bottom-color: rgba(0,0,0,.3);
+  color: #333;
+}
+
+.menu a.selected {
+  border-bottom-color: #ea690a;
+}
+
+#mobile-menu-button {
+  width: 30px;
+  height: 30px;
+  display: inline-block;
+  color: white;
+}
+
+.logout {
+  float: right;
+  margin-right: 20px;
+}
+
+.logout, #mobile-menu-button {
+  display: inline-block;
+  margin: 0;
+  padding: 10px 20px;
+  font-size: 16px;
+  color: #777;
+  text-decoration: none;
+  border-left: 0;
+  border-right: 0;
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  line-height: 30px;
+  width: 20px;
+  background: transparent;
+  box-sizing: content-box;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  #mobile-menu-button {
+    margin-left: -20px;
+  }
+
+  .logout {
+    margin-right: -20px;
+  }
+
+  .menu .max-width {
+    padding: 0;
+    display: flex;
+  }
+
+  .menu h2 {
+    flex-grow: 1;
+  }
+
+  .menu ul {
+    display: none;
+  }
+
+  #mobile-menu-switch:checked + .menu ul {
+    display: block;
+  }
+
+  .menu ul {
+    position: fixed;
+    top: 54px;
+    bottom: 0;
+    left: 0;
+    width: 80%;
+    max-width: 280px;
+    min-width: 150px;
+    background: #333;
+    overflow-y: auto;
+    box-shadow: 20px 0 20px -20px rgba(0,0,0,.25);
+    z-index: 3; /* font awesome */
+  }
+
+  .menu li {
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+
+  .menu a {
+    display: block;
+    color: #ccc;
+  }
+
+  .menu ul a:hover, .menu a.selected {
+    color: #eee;
+    border-bottom: 2px solid transparent;
+  }
+
+  .menu ul a.selected {
+    color: #333;
+    background: #ea690a;
+  }
+}
+
+@media (min-width: 601px) {
+  #mobile-menu-button {
+    display: none;
+  }
+}
