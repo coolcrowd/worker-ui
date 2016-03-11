@@ -413,6 +413,7 @@ WorkerUI = (function () {
 
     function viewNext(next) {
         if (next["type"] === currentViewType) {
+            // TODO merge new with old data
             ractive.set(next);
         } else {
             ractive.teardown();
@@ -446,7 +447,6 @@ WorkerUI = (function () {
                     console.log("Unknown type: " + next["type"])
             }
             currentViewType = next["type"];
-
         }
     }
 

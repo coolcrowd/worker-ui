@@ -14,16 +14,16 @@
 <script>
     // initialize settings
     WorkerUI.init(properties = {
-        workerServiceURL: "https://worker.pse.kelunik.com/",
-        platform: "dummydummy",
-        experiment: 11,
+        workerServiceURL: "http://localhost:8080",
+        platform: "dummysandbox",
+        experiment: 3,
 
         // optional
         preview: false,
         // this will force the answer view
-        FORCE_VIEW: 4,
+        // FORCE_VIEW: 4,
         // this will skip posts
-        NO_POST: true,
+        NO_POST: false,
         // these params will be passed to the crowdplatform implementaion in the object service (optional)
         osParams: {
             workerId: 121,
