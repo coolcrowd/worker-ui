@@ -1,5 +1,6 @@
-<div id="calibrations">
-    <span>Just a few more questions before you start:</span>
+<div class="content input-view" id="calibrations">
+    <h1>Calibrations</h1>
+    <p class="info">Just a few more questions before you start:</p>
     {{#each calibrations:i}}
     <div id="calibration-{{i}}" class='{{ calibrations[i].required ? "required" : ""}}'>
         <span>{{question}}</span>
@@ -13,5 +14,7 @@
         </div>
     </div>
     {{/each}}
-    <button on-click="submit">Go on!</button>
+    <div class="actions-right actions-bottom">
+        <button class="action action-constructive" on-click="submit">Go on!</button>
+    </div>
 </div>
