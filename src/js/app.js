@@ -37,11 +37,8 @@ WorkerUI = (function () {
         }
 
         var nextParams = {};
-        return identifyWorker().then(function (worker) {
+        return identifyWorker().then(function () {
             nextParams = properties.osParams;
-            if (worker !== NO_WORKER) {
-                nextParams.worker = worker;
-            }
             if (skipAnswer) {
                 nextParams.answer = "skip";
             }
@@ -50,29 +47,25 @@ WorkerUI = (function () {
             }
         }).then(function () {
                 console.log("I run now!");
-                return $.getJSON(nextUrl, nextParams, function (data, status) {
+                return $.ajax({
+                    dataType: "json",
+                    url: nextUrl,
+                    data: nextParams,
+                    headers: getAuthenticationHeader()
+                }).done(function (data, status) {
                     if (status === "success") {
-                        extractWorkerId(data);
+                        extractAuthorization(data);
                         viewNext(data);
                     }
-                })
+                });
             }
         );
     }
 
     function postSubmit(route, data) {
         return identifyWorker().then(function () {
-            if (data.email && properties.osParams) {
-                route += "?";
-                var params = properties.osParams;
-                for (var key in params) {
-                    if (params.hasOwnProperty(key)) {
-                        route += key + "=" + params[key] + "&";
-                    }
-                }
-                route = route.substr(0, route.length - 1);
-            }
             var jsonData = JSON.stringify(data);
+
             console.log("POST: " + route + "\n" + jsonData);
             return jsonData;
         }).then(function (jsonData) {
@@ -84,11 +77,12 @@ WorkerUI = (function () {
                     url: route,
                     contentType: "application/json",
                     // function to print all posted data
-                    data: jsonData
+                    data: jsonData,
+                    headers: getAuthenticationHeader()
                 }).done(function (response, status, xhr) {
                     console.log("RESPONSE: " + status + "\n" + JSON.stringify(response, null, 4));
                     if (xhr.status === 201) {
-                        extractWorkerId(response);
+                        extractAuthorization(response);
                     }
                 });
             }
@@ -99,7 +93,7 @@ WorkerUI = (function () {
     /**
      * Sends the value of every key in data seperately
      * @param route the route of the endpoint
-     * @param data the data
+     * @param dataArray the data
      */
     function multipleSubmit(route, dataArray) {
         // TODO proper handling
@@ -123,49 +117,57 @@ WorkerUI = (function () {
 
 // ------------------ Worker Handling ---------------------
 
-    function extractWorkerId(data) {
-        if (data.workerId !== undefined && data.workerId !== 0) {
-            worker = data.workerId;
-            console.log("Extracted workerId: " + data.workerId);
-            persistWorker(worker);
+    function extractAuthorization(data) {
+        if (data.authorization !== undefined && data.authorization.length !== 0) {
+            jwt = data.authorization;
+            console.log("Extracted authorization: " + data.authorization);
+            persistAuthorization(jwt);
         }
     }
 
-    function persistWorker(workerToSet) {
+    function persistAuthorization(jwt) {
         if (typeof(Storage) !== "undefined") {
             // Code for sessionStorage/sessionStorage.
-            sessionStorage.worker = workerToSet;
-            console.log("Persisted worker: " + worker);
+            sessionStorage.authorization = jwt;
+            console.log("Persisted authorization: " + jwt);
         } else {
-            console.log("No sessionStorage available! Couldn't persist worker.");
+            console.log("No sessionStorage available! Couldn't persist authorization.");
         }
     }
 
-    function loadWorker() {
+    function loadAuthorization() {
         if (typeof(Storage) !== "undefined") {
             // Code for sessionStorage/sessionStorage.
-            if (sessionStorage.getItem("worker")) {
-                worker = sessionStorage.getItem("worker");
-                console.log("Loaded worker: " + worker);
-                return worker;
+            if (sessionStorage.getItem("authorization")) {
+                jwt = sessionStorage.getItem("authorization");
+                console.log("Loaded authorization: " + jwt);
+                return jwt;
             } else {
-                console.log("No worker persisted.");
+                console.log("No authorization persisted.");
             }
         } else {
-            console.log("No sessionStorage available! Couldn't load worker.");
+            console.log("No sessionStorage available! Couldn't load authorization.");
         }
-        return NO_WORKER;
+        return NO_AUTH;
+    }
+
+    function getAuthenticationHeader() {
+        var headers = {};
+        if (jwt !== NO_AUTH) {
+            headers.Authorization = "Bearer " + jwt;
+        }
+        return headers;
     }
 
     function identifyWorker() {
-        if (hooks.identifyWorker !== undefined && worker === NO_WORKER) {
+        if (hooks.identifyWorker !== undefined && jwt === NO_AUTH) {
             return hooks.identifyWorker().then(function (params) {
                     properties.osParams = params ? params : {};
-                    return NO_WORKER;
+                    return NO_AUTH;
                 }
             )
         } else {
-            return $.Deferred().resolve(worker).promise();
+            return $.Deferred().resolve(jwt).promise();
         }
     }
 
@@ -190,6 +192,35 @@ WorkerUI = (function () {
             this.on({
                 submit: function () {
                     var toSubmit = this.get("toSubmit");
+
+                    /**
+                     *  parse into the following scheme
+                     *  [
+                     *      {
+                     *          key: workerId,
+                     *          values: [5]
+                     *      },
+                     *      {
+                     *          key: assignmentId,
+                     *          values: [121]
+                     *      }
+                     *  ]
+                     */
+                    if (properties.osParams) {
+                        var paramArray = [];
+                        var pair = {};
+                        for (var param in properties.osParams) {
+                            if (properties.osParams.hasOwnProperty(param)) {
+                                var valueArray = [];
+                                valueArray.push(properties.osParams[param]);
+                                pair.key = param;
+                                pair.values = valueArray;
+                                paramArray.push(pair);
+                                pair = {};
+                            }
+                        }
+                        toSubmit.platform_parameters = paramArray;
+                    }
                     postSubmit(routes.email + properties.platform, toSubmit)
                         .done(function () {
                             ractive.fire("submitEmail", ractive.get(), toSubmit);
@@ -236,7 +267,7 @@ WorkerUI = (function () {
                 submit: function () {
                     var toSubmit = this.parseCalibrations();
                     if (toSubmit !== null && toSubmit.length > 0) {
-                        multipleSubmit(routes.calibration + worker, toSubmit).done(function () {
+                        multipleSubmit(routes.calibration, toSubmit).done(function () {
                             ractive.fire("submitCalibration", ractive.get(), toSubmit);
                             getNext()
                         });
@@ -279,7 +310,7 @@ WorkerUI = (function () {
                         experiment: properties.experiment
                     };
 
-                    postSubmit(routes.answer + worker, toSubmit).done(function () {
+                    postSubmit(routes.answer, toSubmit).done(function () {
                         ractive.fire("submitAnswer", ractive.get(), toSubmit);
                         // clear answer text field
                         ractive.set("toSubmit.answer", "");
@@ -328,7 +359,7 @@ WorkerUI = (function () {
                     toSubmit = this.parseRatings();
                     if (toSubmit !== null && toSubmit.length > 0) {
                         ractive.neededSubmitsCount -= toSubmit.length;
-                        multipleSubmit(routes.rating + worker, toSubmit).done(function () {
+                        multipleSubmit(routes.rating, toSubmit).done(function () {
                             ractive.fire("submitRating", ractive.get(), toSubmit);
                             if (ractive.neededSubmitsCount === 0) {
                                 getNext()
@@ -343,7 +374,7 @@ WorkerUI = (function () {
 
                 skip: function () {
                     skipRating = true;
-                    getNext()
+                    this.fire("next");
                 }
             });
         },
@@ -447,7 +478,6 @@ WorkerUI = (function () {
                     console.log("Unknown type: " + next["type"])
             }
             currentViewType = next["type"];
-
         }
     }
 
@@ -506,21 +536,21 @@ WorkerUI = (function () {
         }
     }
 
-    const NO_WORKER = "no_worker_set";
+    const NO_AUTH = "no_authentication_set";
     var properties = {
         preview: false,
         test: false,
         osParams: {}
     };
-    var worker = NO_WORKER;
+    var jwt = NO_AUTH;
     var skipAnswer = false;
     var skipRating = false;
     var preview = false;
     var routes = {
         email: "emails/",
-        calibration: "calibrations/",
-        answer: "answers/",
-        rating: "ratings/",
+        calibration: "calibrations",
+        answer: "answers",
+        rating: "ratings",
         preview: "preview/"
     };
 
@@ -561,7 +591,7 @@ WorkerUI = (function () {
     return {
         /**
          * Reserved words for osParams:
-         * worker, answer, rating
+         * authorization, answer, rating
          * @param props
          */
         init: function (props) {
@@ -619,7 +649,7 @@ WorkerUI = (function () {
 
         //starts loading the first "next view"
         load: function () {
-            worker = loadWorker();
+            jwt = loadAuthorization();
             if (properties.FORCE_VIEW) {
                 properties.workerServiceURL = "/WorkerUI/resources/";
             }
