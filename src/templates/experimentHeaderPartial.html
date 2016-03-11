@@ -4,8 +4,10 @@
 {{# pictures[0]}}
 <div class="image-container">
     {{#each pictures}}
-        <img src="{{url}}">
+    <div>
         <label>{{urlLicense}}</label>
+        <img src="{{url}}">
+    </div>
     {{/each}}
 </div>
 {{/pictures}}

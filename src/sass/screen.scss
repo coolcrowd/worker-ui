@@ -135,6 +135,10 @@ pre {
   height: 230px;
   @include clear-fix();
 
+  div {
+    float: left;
+  }
+
   img {
     float: left;
     background-repeat: no-repeat;
