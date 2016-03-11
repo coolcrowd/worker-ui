@@ -46,7 +46,6 @@ WorkerUI = (function () {
                 nextParams.rating = "skip";
             }
         }).then(function () {
-                console.log("I run now!");
                 return $.ajax({
                     dataType: "json",
                     url: nextUrl,
@@ -578,14 +577,25 @@ WorkerUI = (function () {
     }
 
     function loadStyles() {
-        var pathname = $('#worker_ui').attr("src");
-        var index = pathname.lastIndexOf("/") + 1;
-        var stylePath = pathname.slice(0, index) + "screen.css";
+        var $worker_ui = $('#worker_ui');
+        if ($worker_ui.length > 0) {
+            var pathname = $worker_ui.attr("src");
+            var index = pathname.lastIndexOf("/") + 1;
+            var stylePath = pathname.slice(0, index) + "screen.css";
 
-        var head = $('head');
-        head.append('<link rel="stylesheet" href="' + stylePath + '" type="text/css" />');
-        head.append('<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">');
-        $('#ractive-container').addClass("max-width");
+            var head = $('head');
+            head.append('<link rel="stylesheet" href="' + stylePath + '" type="text/css" />');
+            head.append('<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">');
+        } else {
+            console.log("To enable css styles please ensure that the worker_ui.js script tag has the attribute id='worker_ui' set.");
+        }
+        var $container = $('#ractive-container');
+        if ($container.length > 0) {
+            $container.addClass("max-width");
+        } else {
+            alert("Please ensure there is a div tag with the attribute id='ractive-container' set. " +
+                "This serves as entry point for the views.")
+        }
     }
 
     return {
