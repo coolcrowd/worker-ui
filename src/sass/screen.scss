@@ -9,6 +9,14 @@ body {
   font-size: 16px;
 }
 
+@mixin clear-fix() {
+  &:after {
+    content:"";
+    display:block;
+    clear:both;
+  }
+}
+
 .fa {
   font-size: 14px;
 }
@@ -122,6 +130,25 @@ pre {
   white-space: pre-wrap;
 }
 
+.image-container {
+  position: relative;
+  height: 230px;
+  @include clear-fix();
+
+  img {
+    float: left;
+    background-repeat: no-repeat;
+    max-height: 200px;
+    width: auto;
+  }
+
+  label {
+    float: left;
+    position: absolute;
+    bottom: 0;
+  }
+}
+
 .key {
   font-size: 13px;
   background: #eee;
@@ -142,17 +169,11 @@ pre {
   color: #d00;
 }
 
-.answer {
-  padding: 8px;
-}
-
-.answer-meta {
-  color: #888;
-}
-
-.answer-meta > * {
-  display: inline-block;
-  margin: 8px 16px 8px 0;
+.required {
+  //padding: 5px 0;
+  border: solid #dd0000 1px;
+  border-radius: 3px;
+  background-color: #dd8e8e;
 }
 
 .dont-break-out {
@@ -182,8 +203,8 @@ pre {
 @import "content";
 @import "list";
 @import "actions";
-@import "wizard";
+@import "input-view";
 @import "loader";
 @import "login";
-@import "pagination";
 @import "dialog";
+@import "rating";

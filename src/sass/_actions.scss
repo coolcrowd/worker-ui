@@ -1,9 +1,3 @@
-.actions {
-  float: right;
-  line-height: 40px;
-  text-align: right;
-}
-
 .action {
   display: inline-block;
   line-height: 18px;
@@ -49,6 +43,12 @@
 .action-destructive {
   background-color: #ab3900 !important;
   color: white;
+}
+
+.actions-right {
+  float: right;
+  line-height: 40px;
+  text-align: right;
 }
 
 .actions-bottom {

@@ -46,7 +46,7 @@ module.exports = {
             dest: dest,
             outputName: 'worker_ui.js',
             extensions: [],
-            transform: ["modcss", "ractivate"]
+            transform: ["ractivate"]
         }]
     },
     production: {

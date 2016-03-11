@@ -1,2 +1,11 @@
-<h3>{{title}}</h3>
-<span>{{description}}</span>
+<h1>{{title}}</h1>
+<p class="info">{{description}}</p>
+
+{{# pictures[0]}}
+<div class="image-container">
+    {{#each pictures}}
+        <img src="{{url}}">
+        <label>{{urlLicense}}</label>
+    {{/each}}
+</div>
+{{/pictures}}

@@ -1,37 +1,64 @@
-<div id="ratings">
+<div class="content input-view" id="ratings">
     {{>experimentHeader}}
-    {{#each answersToRate:i}}
-    <div id="ratingId-{{id}}">
-        <div id="answer-container">
-            {{answer}}
-        </div>
-        <div id="rating-options-{{answersToRate[i].id}}" class='{{ answersToRate[i].required ? "required" : "" }}' >
-            <span>Please rate!</span>
-            {{#each ratingOptions:j}}
-            <label>
-                <input type="radio" name="{{~/toSubmit.ratings[i]}}" id="{{answersToRate[i].id}}-ratingId-{{i}}-{{j}}" value={{value}}>
-                {{description}}
-            </label>
-            {{/each}}
-        </div>
-        <div id="rating-constraints">
-            <span>
-                The answer has the following constraints.
-                Check all that are violated and do not apply for this answer.
-            </span><br>
-                {{#each constraints:j}}
-                <label>
-                    <input type="checkbox" name="{{~/toSubmit.constraints[i]}}" id="{{answersToRate[i].id}}-calibrationId-{{i}}-{{j}}" value="{{id}}">
-                    {{name}}
-                </label>
-                {{/each}}
+    <ul class="rating-list">
+        {{#each answersToRate:i}}
+        {{# !answersToRate[i].hidden }}
+        <li class="rating" outro="fade" id="rating-{{i}}">
+            <div class="answer-container">
+                <label class="input-label">Answer to rate</label>
+                <p class="">{{answer}}</p>
+            </div>
+            <div class="rating-container">
+                <label class="input-label">Rating</label>
+                <div class='{{ answersToRate[i].required ? "required" : "" }}'>
+                    {{#each ratingOptions:j}}
+                    <label on-click="removeRequired:{{i}}">
+                        <input type="radio" name="{{~/toSubmit.ratings[i]}}"
+                               id="{{answersToRate[i].id}}-ratingId-{{i}}-{{j}}" value={{value}}>
+                        {{description}}
+                    </label>
+                    {{/each}}
+                </div>
+            </div>
+            {{#if constraints[0] }}
+            <div class="constraints-container">
+                <label class="input-label">Constraints</label>
+                <p class="input-help">
+                    The answer has the following constraints.
+                    Check all that are violated and do not apply for this answer.
+                </p>
+                <ul class="checkbox-list">
+                    {{#each constraints:j}}
+                    <li>
+                        <label>
+                            <input type="checkbox" name="{{~/toSubmit.constraints[i]}}"
+                                   id="{{answersToRate[i].id}}-calibrationId-{{i}}-{{j}}" value="{{id}}">
+                            {{name}}
+                        </label>
+                    </li>
+                    {{/each}}
+                </ul>
 
-        </div>
-        <textarea name="feedback" placeholder="Write a feedback for the author! (optional)" value="{{toSubmit.feedbacks[i]}}"></textarea>
+            </div>
+            {{/if}}
+            <div class="feedback-container">
+                <label class="input-label">Feedback</label>
+                <p class="input-help">You can leave a feedback for the author.</p>
+                <textarea name="feedback" value="{{toSubmit.feedbacks[i]}}"></textarea>
+            </div>
+        </li>
+        {{/}}
+        {{/each answersToRate}}
+    </ul>
+
+    <div class="actions actions-right actions-bottom">
+
+        <span>You need to select a rating for all answers!</span>
+        <button class="action action-constructive" on-click="submit">Hand in!</button>
+        {{#if skipAllowed}}
+        <button class="action action-constructive" on-click="skip">Skip</button>
+        {{/if}}
     </div>
-    {{/each answersToRate}}
 </div>
-<button on-click="submit">Hand in!</button>
-{{#if skipAllowed}}
-<button on-click="skip">Skip</button>
-{{/if}}
+
+

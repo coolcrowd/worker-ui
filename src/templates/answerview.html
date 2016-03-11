@@ -1,46 +1,42 @@
-<div id="answer">
+<div class="content input-view" id="answer">
     {{>experimentHeader}}
+    {{#if constraints[0]}}
     <div id="answer-constraints">
-        <span>
-            The following constraints must not be violated:
-        </span>
+        <label class="input-label">Constraints</label>
+        <p class="input-help">
+            The following constraints must not be violated.
+        </p>
+
+        <ul class="list">
         {{#each constraints}}
-        <ul>
             <li>{{name}}</li>
-        </ul>
         {{/each}}
-    </div>
-    {{#if answerType === "images"}}
-    <div>
-        <textarea name="answer" value="{{toSubmit.answer}}" placeholder="Enter your image url here!"></textarea>
-    </div>
-    <div id="answer-image">
-        <div class="image"
-             style="background-image: url('{{toSubmit.answer}}');
-                    height: 200px;">
-        </div>
-    </div>
-    {{else}}
-    <div>
-        <textarea name="answer" value="{{toSubmit.answer}}" placeholder="Enter your answer here!"></textarea>
+        </ul>
+
     </div>
     {{/if}}
 
-    <div id="images">
-        {{#each pictures}}
-        <div class="image"
-             style="background-image: url('{{url}}');
-                    height: 200px;">
+    <div class="input">
+        {{#if answerType === "images"}}
+        <label class="input-label">Answer</label>
+        <input type="text" name="answer" value="{{toSubmit.answer}}" placeholder="Enter your image url here!">
+        <div class="image">
+            <img src="{{toSubmit.answer}}">
         </div>
-        <label>{{urlLicense}}</label>
-        {{/each}}
+        {{else}}
+        <label class="input-label">Image</label>
+        <textarea name="answer" value="{{toSubmit.answer}}" placeholder="Enter your answer here!"></textarea>
+        {{/if}}
     </div>
+
 
     {{#if !isPreview}}
-    <span>You can hand in <b>{{maxAnswersToGive}}</b> more answers!</span>
-    <button on-click="submit">Hand in!</button>
-    {{#if skipAllowed}}
-    <button on-click="skip">Skip</button>
-    {{/if}}
+    <div class="actions-right actions-bottom">
+        <span>You can hand in <b>{{maxAnswersToGive}}</b> more answers!</span>
+        <button class="action action-constructive" on-click="submit">Hand in!</button>
+        {{#if skipAllowed}}
+        <button class="action action-destructive" on-click="skip">Skip</button>
+        {{/if}}
+    </div>
     {{/if}}
 </div>

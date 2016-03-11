@@ -5,7 +5,6 @@ WorkerUI = (function () {
     // disable debug mode when minified
     Ractive.DEBUG = /unminified/.test(function () {/*unminified*/
     });
-
     // -------------- Requests & Helpers -------------------
     var types = loop(["email", "calibration", "answer", "rating", "finished"]);
     const EMAIL = 1;
@@ -175,8 +174,6 @@ WorkerUI = (function () {
     var DefaultView = Ractive.extend({
         el: "#ractive-container",
 
-        css: require("../../build/screen.css"),
-
         partials: {
             experimentHeader: require("../templates/experimentHeaderPartial.html")
         },
@@ -252,7 +249,7 @@ WorkerUI = (function () {
          * Parses ratings from the view and marks missing values.
          * @returns {Array}
          */
-        parseCalibrations: function() {
+        parseCalibrations: function () {
             var toSubmit = [];
             var calibrations = ractive.get("calibrations");
             var answerOptions = ractive.get("toSubmit.answerOptions");
@@ -286,13 +283,15 @@ WorkerUI = (function () {
                         ractive.fire("submitAnswer", ractive.get(), toSubmit);
                         // clear answer text field
                         ractive.set("toSubmit.answer", "");
+                        ractive.set("skipAllowed", true);
                         getNext()
                     });
                 },
 
                 skip: function () {
                     skipAnswer = true;
-                    this.fire("next");
+                    getNext()
+
                 }
             });
         }
@@ -301,6 +300,8 @@ WorkerUI = (function () {
 
     var RatingView = DefaultView.extend({
         template: require("../templates/ratingview.html"),
+
+        neededSubmitsCount: 0,
 
         oninit: function () {
             // if answers were skipped dont allow skip ratings
@@ -311,10 +312,13 @@ WorkerUI = (function () {
             var ratings = [];
             for (var i = 0; i < answersToRate.length; i++) {
                 answersToRate[i].required = false;
+                answersToRate[i].hidden = false;
                 ratings.push(null);
             }
             this.set("answersToRate", answersToRate);
             this.set("toSubmit.ratings", ratings);
+
+            this.neededSubmitsCount = answersToRate.length;
 
             // register events
             this.on({
@@ -323,11 +327,18 @@ WorkerUI = (function () {
 
                     toSubmit = this.parseRatings();
                     if (toSubmit !== null && toSubmit.length > 0) {
+                        ractive.neededSubmitsCount -= toSubmit.length;
                         multipleSubmit(routes.rating + worker, toSubmit).done(function () {
                             ractive.fire("submitRating", ractive.get(), toSubmit);
-                            getNext()
+                            if (ractive.neededSubmitsCount === 0) {
+                                getNext()
+                            }
                         });
                     }
+                },
+
+                removeRequired: function (event, i) {
+                    ractive.set("answersToRate[" + i + "].required", false);
                 },
 
                 skip: function () {
@@ -349,10 +360,22 @@ WorkerUI = (function () {
             var feedbacks = this.get("toSubmit.feedbacks");
             var constraints = this.get("toSubmit.constraints");
             var ratedAnswer;
+            var scrolled = false;
             for (var i = 0; i < answersToRate.length; i++) {
                 if (ratings === undefined || ratings[i] === undefined) {
                     // mark missing rating
-                    ractive.set("answersToRate[" + i + "].required", true);
+                    ractive.animate("answersToRate[" + i + "].required", true, {
+                        easing: "easeIn",
+                        duration: 1000
+                    });
+                    if (!scrolled) {
+                        $('html,body').animate({
+                                scrollTop: $("#rating-" + i).offset().top
+                            },
+                            'slow'
+                        );
+                        scrolled = true;
+                    }
                 } else {
                     ratedAnswer = {};
                     ratedAnswer.rating = parseInt(ratings[i]);
@@ -362,6 +385,8 @@ WorkerUI = (function () {
                     ratedAnswer.feedback = feedbacks[i];
                     ratedAnswer.constraints = constraints[i];
                     toSubmit.push(ratedAnswer);
+                    // hide rated answers
+                    //ractive.set("answersToRate[" + i + "].hidden", true);
                 }
             }
             return toSubmit;
@@ -381,7 +406,6 @@ WorkerUI = (function () {
             this.fire("finished");
         }
     });
-
 
 //---------------- View building ------------------------
 
@@ -499,6 +523,17 @@ WorkerUI = (function () {
         }
     }
 
+    function loadStyles() {
+        var pathname = $('#worker_ui').attr("src");
+        var index = pathname.lastIndexOf("/") + 1;
+        var stylePath = pathname.slice(0, index) + "screen.css";
+
+        var head = $('head');
+        head.append('<link rel="stylesheet" href="' + stylePath + '" type="text/css" />');
+        head.append('<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">');
+        $('#ractive-container').addClass("max-width");
+    }
+
     return {
         /**
          * Reserved words for osParams:
@@ -508,7 +543,10 @@ WorkerUI = (function () {
         init: function (props) {
             initProperties(props);
             makeRoutes();
+            loadStyles();
+
             this.currentViewType = "DEFAULT";
+            // set global ajax error handler
             $(document).ajaxError(function (event, request, settings, thrownError) {
                 alert(request.statusText
                     + JSON.stringify(request.responseJSON, null, 4));

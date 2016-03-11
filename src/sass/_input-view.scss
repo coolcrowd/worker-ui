@@ -1,0 +1,52 @@
+.input-view label input[type="checkbox"] {
+  transform: translateY(3px);
+  margin: 4px 8px;
+}
+
+.input-view input[type="text"] {
+  display: block;
+  margin: 8px 0;
+  padding: 0 8px;
+  line-height: 30px;
+  width: 100%;
+  border: 1px solid rgba(0,0,0,.15);
+}
+
+.input-view textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 150px;
+  padding: 8px;
+  border: 1px solid rgba(0,0,0,.15);
+}
+
+.input-help {
+  margin: 4px 0 10px 0;
+  color: #666;
+  font-size: 90%;
+}
+
+.input-view input[type="number"] {
+  width: 100px;
+  display: inline-block;
+  margin: 8px 0;
+  padding: 0 8px;
+  line-height: 30px;
+  border: 1px solid rgba(0,0,0,.15);
+  text-align: right;
+}
+
+.radio-option {
+  padding: 4px;
+  display: block;
+}
+
+.radio-option input[type="radio"] {
+  margin: 4px 8px;
+  float: left;
+}
+
+.radio-option > span {
+  padding-left: 30px;
+  display: block;
+}
