@@ -343,7 +343,7 @@ WorkerUI = (function () {
 
                 skip: function () {
                     skipRating = true;
-                    this.fire("next");
+                    getNext()
                 }
             });
         },
@@ -413,7 +413,8 @@ WorkerUI = (function () {
 
     function viewNext(next) {
         if (next["type"] === currentViewType) {
-            ractive.set(next);
+            var old = ractive.get();
+            ractive.set(mergeObject(old, next));
         } else {
             ractive.teardown();
             switch (next["type"]) {
@@ -456,6 +457,29 @@ WorkerUI = (function () {
             preview.isPreview = true;
             viewNext(preview);
         })
+    }
+
+
+    /**
+     * Overwrites object1's values with obj2's and adds object2's if non existent in object1
+     * @param object1
+     * @param object2
+     * @returns object a new object based on object1 and object2
+     */
+    function mergeObject(object1, object2) {
+        var result = {};
+        var prop;
+        for (prop in object1) {
+            if (object1.hasOwnProperty(prop)) {
+                result[prop] = object1[prop];
+            }
+        }
+        for (prop in object2) {
+            if (object2.hasOwnProperty(prop)) {
+                result[prop] = object2[prop];
+            }
+        }
+        return result;
     }
 
     var hooks = {};
