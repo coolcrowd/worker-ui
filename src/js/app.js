@@ -525,9 +525,9 @@ WorkerUI = (function () {
     var preview = false;
     var routes = {
         email: "emails/",
-        calibration: "calibrations/",
-        answer: "answers/",
-        rating: "ratings/",
+        calibration: "calibrations",
+        answer: "answers",
+        rating: "ratings",
         preview: "preview/"
     };
 
