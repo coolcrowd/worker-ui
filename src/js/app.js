@@ -218,7 +218,7 @@ WorkerUI = (function () {
                                 pair = {};
                             }
                         }
-                        toSubmit.platform_parameters = paramArray;
+                        toSubmit.platformParameters = paramArray;
                     }
                     postSubmit(routes.email + properties.platform, toSubmit)
                         .done(function () {
@@ -306,7 +306,8 @@ WorkerUI = (function () {
                 submit: function () {
                     var toSubmit = {
                         answer: this.get("toSubmit.answer"),
-                        experiment: properties.experiment
+                        experiment: properties.experiment,
+                        reservation: this.get("answerReservations").pop()
                     };
 
                     postSubmit(routes.answer, toSubmit).done(function () {

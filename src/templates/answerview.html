@@ -32,7 +32,7 @@
 
     {{#if !isPreview}}
     <div class="actions-right actions-bottom">
-        <span>You can hand in <b>{{maxAnswersToGive}}</b> more answers!</span>
+        <span>You can hand in <b>{{answerReservations.length}}</b> more answers!</span>
         <button class="action action-constructive" on-click="submit">Hand in!</button>
         {{#if skipAllowed}}
         <button class="action action-destructive" on-click="skip">Skip</button>
