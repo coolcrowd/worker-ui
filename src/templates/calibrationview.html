@@ -1,17 +1,20 @@
-<div id="calibrations">
-    {{#each calibrations :i}}
-    <div id="calibration-{{i}}">
+<div class="content input-view" id="calibrations">
+    <h1>Calibrations</h1>
+    <p class="info">Just a few more questions before you start:</p>
+    {{#each calibrations:i}}
+    <div id="calibration-{{i}}" class='{{ calibrations[i].required ? "required" : ""}}'>
         <span>{{question}}</span>
         <div>
-            {{# answerOptions : j}}
+            {{#each answerOptions:j}}
             <label>
-                <input on-change="radioChange" type="radio" style='{{ required(calibrations[i].id) ? "required" : ""}}'
-                       name="options-{{i}}" id="{{i}}-{{j}}" value={{id}}>
+                <input type="radio" name="{{~/toSubmit.answerOptions[i]}}" id="{{calibrations[i].id}}-calibrationId-{{i}}-{{j}}" value={{id}}>
                 {{option}}
             </label>
-            {{/}}
+            {{/each}}
         </div>
     </div>
     {{/each}}
-    <button on-click="submit">Go on!</button>
+    <div class="actions-right actions-bottom">
+        <button class="action action-constructive" on-click="submit">Go on!</button>
+    </div>
 </div>

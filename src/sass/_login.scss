@@ -1,0 +1,95 @@
+.login {
+  margin: auto;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+}
+
+.login-inner {
+  max-width: 300px;
+  margin: auto;
+  padding: 20px 0 120px 0; /* logo */
+}
+
+.login-logo {
+  margin: 30px;
+}
+
+.login-form {
+  padding: 30px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.1);
+  background: white;
+  text-align: center;
+  border: 1px solid transparent;
+}
+
+.login-form h1 {
+  font-size: 22px;
+  font-weight: bold;
+  padding: 0;
+  margin: -10px 0 5px 0;
+  font-style: normal;
+  color: #666;
+}
+
+.login-form .input-label {
+  font-size: 12px;
+  margin: 20px 0 10px 0;
+  float: left;
+}
+
+.login-form input {
+  margin: 0;
+  clear: left;
+  font-size: 16px;
+  border: 1px solid rgba(0,0,0,.1);
+  padding: 10px;
+  width: 100%;
+}
+
+.login-submit {
+  margin: 20px 0 5px 0;
+}
+
+.login-submit button {
+  margin: 0;
+  width: 100%;
+  padding: 15px 30px;
+  font-size: 16px;
+}
+
+.login-submit button:disabled {
+  background: grey;
+}
+
+@keyframes shake {
+  0% { transform: translate(2px, 1px) rotate(0deg); border-color: #ffa5a2; background: #ffdada; }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(0px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(2px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(2px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); border-color: transparent; background: white; }
+}
+
+.shake-enter {
+  animation-name: shake;
+  animation-duration: 0.8s;
+  transform-origin: 50% 50%;
+  animation-iteration-count: 3;
+  animation-timing-function: linear;
+  animation-fill-mode: backwards;
+}
+
+@media (max-width: 600px) {
+  .login-inner {
+    padding: 0;
+  }
+}

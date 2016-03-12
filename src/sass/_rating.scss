@@ -1,0 +1,45 @@
+.rating-list {
+  padding: 0;
+  margin: 0;
+  display: block;
+  list-style-type: none;
+  width: 100%;
+  border-collapse: collapse;
+
+  > .rating {
+    line-height: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0;
+    display: block;
+    border-bottom: 1px solid #ddd;
+
+    @include clear-fix();
+
+    > .answer-container {
+      display: block;
+      width: 100%;
+    }
+
+    > div {
+      padding: 0 5px;
+      display: inline;
+      float: left;
+      width: 33%;
+    }
+
+  }
+
+}
+
+.checkbox-list {
+  list-style-type: none;
+  padding-left: 18px;
+
+  label {
+    margin-left: -2px;
+    input[type="checkbox"] {
+      margin: 0 0 0 -16px;
+    }
+  }
+}

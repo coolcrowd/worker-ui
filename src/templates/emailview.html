@@ -1,7 +1,19 @@
-<div id="email">
-    <input on-focus="focus" placeholder="Enter your email" value="{{toSubmit.email}}">
-    <button on-click="submit" {{valid ? "" : "disabled"}}>Send!</button>
-    {{#if !valid}}
-    <div class="validation-error">This is not a valid mail address.</div>
-    {{/if}}
+<div class="content input-view" id="email">
+    <h1>Register</h1>
+    <p class="info">
+        For participating in some of our experiments you can receive <b>amazon gift codes as payment</b>.
+        Furthermore, your answers will be rated by other crowd workers.
+        To <b>send you feedback</b> and gift codes we need your email address.
+    </p>
+    <div class="input">
+        <label class="input-label">Email</label>
+        <p class="input-help">Your email will only be used to send you feedback and payment.</p>
+        <input type="text" on-focus="focus" placeholder="Enter your email address" value="{{toSubmit.email}}">
+    </div>
+    <div class="actions-bottom actions-right">
+        {{#if !valid}}
+            <span class="validation-error">This is not a valid email address.</span>
+        {{/if}}
+        <button class="action action-constructive" on-click="submit" {{valid ? "" : "disabled"}}>Send!</button>
+    </div>
 </div>

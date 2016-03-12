@@ -12,16 +12,21 @@
       "id": 18,
       "answerId": 87,
       "answer": "Knock, knock. Who’s there? Not you."
+    },
+    {
+      "id": 22,
+      "answerId": 81,
+      "answer": "Knock, knock. Who am I?"
     }
   ],
   "constraints": [
     {
-      "id": 55,
-      "name": "the joke must not be racist."
+      "id": 5,
+      "name": "The tweet must not be racist."
     },
     {
-      "id": 56,
-      "name": "asd racist."
+      "id": 4,
+      "name": "The tweet must not contain bad news. And a long text, furthermore the answer should be easy to understand."
     }
   ],
   "ratingOptions": [
