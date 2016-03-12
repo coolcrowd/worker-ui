@@ -2,7 +2,7 @@
   "type": "ANSWER",
   "title": "Mean Tweet",
   "description": "This is the description of the example-task. It specifies what the worker has to do.",
-  "maxAnswersToGive": 3,
+  "answerReservations": [2, 4, 3],
   "answerType": "images",
   "pictures": [
     {
