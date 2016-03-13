@@ -48,20 +48,21 @@
 
 <script>
     var defaultProperties = {
-        workerServiceURL: "http://localhost:8080",
-        platform: "dummysandbox",
+        workerServiceURL: "http://${WS_URL}",
+        platform: "dummydummy",
         experiment: 3,
 
         // optional
-        preview: false,
+        //preview: false,
         // this will force the answer view
-        FORCE_VIEW: 3,
+        //FORCE_VIEW: 3,
         // this will skip posts
         NO_POST: false,
         // these params will be passed to the crowdplatform implementaion in the object service (optional)
         osParams: {
-            workerId: 121,
-            assignmentId: 1234
+            //e.g.
+            //workerId: 121,
+            //assignmentId: 1234
         }
     };
 
