@@ -40,6 +40,7 @@
             <textarea id="properties" wrap="soft" rows="20"></textarea>
         </label>
         <button onclick="init(JSON.parse(document.getElementById('properties').value))">Load view</button>
+        <button onclick="WorkerUI.clearWorker()">Clear worker</button>
     </div>
     <div id="ractive-container"></div>
 </div>
@@ -50,7 +51,7 @@
     var defaultProperties = {
         workerServiceURL: "${WS_URL}",
         platform: "dummydummy",
-        experiment: 3,
+        experiment: 1,
 
         // optional
         //preview: false,
