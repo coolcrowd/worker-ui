@@ -24,3 +24,6 @@ RUN rm /usr/share/nginx/html/index.html
 RUN ls /usr/share/nginx/html
 RUN cp -avr /build/. /usr/share/nginx/html
 RUN rm -rf build/
+#from control-ui
+# TODO: This is only a workaround, it doesn't trap signals corretly for nginx to stop on SIGINT, has to wait for SIGKILL.
+ENTRYPOINT ["/bin/bash", "-c", "envsubst < /usr/share/nginx/html/debug.html > /usr/share/nginx/html/debug.html && nginx -g 'daemon off;'"]
