@@ -9,7 +9,6 @@ RUN ln -s /usr/bin/nodejs /usr/bin/node
 RUN apt-get -qq install curl -y
 RUN curl -q https://www.npmjs.com/install.sh | sh
 COPY src /src
-COPY resources /resources
 COPY lib /lib
 COPY gulp /gulp
 COPY gulpfile.js /gulpfile.js
