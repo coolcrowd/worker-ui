@@ -44,4 +44,4 @@ To host the files from `./build` use `gulp browserSync`.
 ## Usage
 
 The worker UI is bundled in the `worker_ui.js` and exports the object `WorkerUI`.
-See [here](src/index.html) for sample usage.
+See [here](src/sample.html) for sample usage.
