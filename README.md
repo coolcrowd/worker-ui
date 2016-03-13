@@ -28,7 +28,7 @@ gulp production
 git clone https://github.com/coolcrowd/worker-ui && cd worker-ui
 
 docker build -t worker-ui .
-docker run -ti -v $PWD/build:/app/build worker-ui
+docker run worker-ui
 
 # Build is now ready in $PWD/build
 ```
