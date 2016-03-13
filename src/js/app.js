@@ -150,6 +150,12 @@ WorkerUI = (function () {
         return NO_AUTH;
     }
 
+    function clearAuthorization() {
+        if (typeof(Storage) !== "undefined") {
+            sessionStorage.clear();
+        }
+    }
+
     function getAuthenticationHeader() {
         var headers = {};
         if (jwt !== NO_AUTH) {
@@ -655,6 +661,10 @@ WorkerUI = (function () {
 
         beforeIdentifyWorker: function (call) {
             hooks.identifyWorker = call;
+        },
+
+        clearWorker: function () {
+            clearAuthorization();
         },
 
 
