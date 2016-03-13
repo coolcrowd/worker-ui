@@ -443,7 +443,9 @@ WorkerUI = (function () {
     var ractive, currentViewType;
 
     function viewNext(next) {
-        if (next["type"] === currentViewType) {
+        // TODO evaluate if view should always be reloaded
+        if (false) {
+        //if (next["type"] === currentViewType) {
             var old = ractive.get();
             ractive.set(mergeObject(old, next));
         } else {
@@ -662,7 +664,7 @@ WorkerUI = (function () {
         load: function () {
             jwt = loadAuthorization();
             if (properties.FORCE_VIEW) {
-                properties.workerServiceURL = "/WorkerUI/resources/";
+                properties.workerServiceURL = "resources/";
             }
             properties.preview === true ? viewPreview() : getNext();
 

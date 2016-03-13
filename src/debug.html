@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>WorkerUI Example</title>
+    <style>
+        body {
+            position: absolute;
+            margin: 0;
+            height: 100%;
+        }
+        .container {
+            position: relative;
+            padding: 0 0 0 305px;
+            width: 100%;
+            height: 100%;
+        }
+
+        #sidebar {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 300px;
+            background: #9a9a9a;
+        }
+
+        #properties {
+            width: 95%;
+            resize: vertical;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div id="sidebar">
+        <label>
+            Properties
+            <textarea id="properties" wrap="soft" rows="20"></textarea>
+        </label>
+        <button onclick="init(JSON.parse(document.getElementById('properties').value))">Load view</button>
+    </div>
+    <div id="ractive-container"></div>
+</div>
+
+<script id="worker_ui" src="worker_ui.js"></script>
+
+<script>
+    var defaultProperties = {
+        workerServiceURL: "http://localhost:8080",
+        platform: "dummysandbox",
+        experiment: 3,
+
+        // optional
+        preview: false,
+        // this will force the answer view
+        FORCE_VIEW: 3,
+        // this will skip posts
+        NO_POST: false,
+        // these params will be passed to the crowdplatform implementaion in the object service (optional)
+        osParams: {
+            workerId: 121,
+            assignmentId: 1234
+        }
+    };
+
+    // set properties in view
+    document.getElementById('properties').value = JSON.stringify(defaultProperties, null, 4);
+
+    // initialize with properties
+    function init(properties) {
+
+        defaultProperties = properties;
+
+        // initialize settings
+        WorkerUI.init(properties);
+
+        WorkerUI.onSubmitEmail(function (viewData, submittedData) {
+
+        });
+        WorkerUI.onSubmitCalibration(function (viewData, submittedData) {
+            console.log("calibration submitted" + JSON.stringify(submittedData));
+        });
+        var answerArray = [];
+        WorkerUI.onSubmitAnswer(function (viewData, submittedData) {
+            answerArray.push(submittedData.answer);
+            console.log("viewData: \n" + JSON.stringify(viewData, null, 4));
+            console.log("submittedData: \n" + JSON.stringify(submittedData, null, 4));
+        });
+        WorkerUI.onSubmitRating(function (viewData, submittedData) {
+
+        });
+        WorkerUI.onSubmitAny(function (viewData, submittedData) {
+            console.log("Something was submitted");
+        });
+        WorkerUI.onFinished(function () {
+
+        });
+
+        WorkerUI.load();
+    }
+
+</script>
+</body>
+
+</html>
