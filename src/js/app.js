@@ -1,5 +1,6 @@
 var Ractive = require("ractive");
 var $ = require("jquery");
+var Mime = require("./mimeType");
 
 WorkerUI = (function () {
     // disable debug mode when minified
@@ -304,10 +305,14 @@ WorkerUI = (function () {
         oninit: function () {
             this.on({
                 submit: function () {
+                    var data = this.get();
+                    if (data.answerType === "images") {
+                        Mime.checkIfImage(data.toSubmit.answer);
+                    }
                     var toSubmit = {
-                        answer: this.get("toSubmit.answer"),
+                        answer: data.toSubmit.answer,
                         experiment: properties.experiment,
-                        reservation: this.get("answerReservations").pop()
+                        reservation: data.answerReservations.pop()
                     };
 
                     postSubmit(routes.answer, toSubmit).done(function () {
