@@ -5,8 +5,9 @@
 <div class="image-container">
     {{#each pictures}}
     <div>
-        <label>{{urlLicense}}</label>
-        <img src="{{url}}">
+        <img class="center" src="{{url}}">
+        <label>License URL</label>
+        <a href="{{urlLicense}}">{{urlLicense}}</a>
     </div>
     {{/each}}
 </div>

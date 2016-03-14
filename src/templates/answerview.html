@@ -12,20 +12,22 @@
             <li>{{name}}</li>
         {{/each}}
         </ul>
-
     </div>
     {{/if}}
 
     <div class="input">
         {{#if answerType === "images"}}
-        <label class="input-label">Answer</label>
+        <label class="input-label">Image</label>
         <input type="text" name="answer" value="{{toSubmit.answer}}" placeholder="Enter your image url here!">
-        <div class="image">
-            <img src="{{toSubmit.answer}}">
+        <div id="answer-image">
+            <img class="center" src="{{toSubmit.answer}}">
         </div>
         {{else}}
-        <label class="input-label">Image</label>
+        <label class="input-label">Answer</label>
         <textarea name="answer" value="{{toSubmit.answer}}" placeholder="Enter your answer here!"></textarea>
+        {{/if}}
+        {{#if required}}
+        <span class="validation-error">The {{ answerType === "images" ? "image" : "answer" }} field must not be empty.</span>
         {{/if}}
     </div>
 

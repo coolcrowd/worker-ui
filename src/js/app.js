@@ -1,5 +1,6 @@
 var Ractive = require("ractive");
 var $ = require("jquery");
+var Mime = require("./mimeType");
 
 WorkerUI = (function () {
     // disable debug mode when minified
@@ -7,11 +8,11 @@ WorkerUI = (function () {
     });
     // -------------- Requests & Helpers -------------------
     var types = loop(["email", "calibration", "answer", "rating", "finished"]);
-    const EMAIL = 1;
-    const CALIBRATION = 2;
-    const RATING = 3;
-    const ANSWER = 4;
-    const FINISHED = 5;
+    var EMAIL = 1;
+    var CALIBRATION = 2;
+    var RATING = 3;
+    var ANSWER = 4;
+    var FINISHED = 5;
 
     function loop(array) {
         var index = 0;
@@ -39,10 +40,10 @@ WorkerUI = (function () {
         var nextParams = {};
         return identifyWorker().then(function () {
             nextParams = properties.osParams;
-            if (skipAnswer) {
+            if (answerSkipped) {
                 nextParams.answer = "skip";
             }
-            if (skipRating) {
+            if (ratingSkipped) {
                 nextParams.rating = "skip";
             }
         }).then(function () {
@@ -64,26 +65,29 @@ WorkerUI = (function () {
     function postSubmit(route, data) {
         return identifyWorker().then(function () {
             var jsonData = JSON.stringify(data);
-
             console.log("POST: " + route + "\n" + jsonData);
             return jsonData;
         }).then(function (jsonData) {
             if (properties.NO_POST) {
                 return $.Deferred().resolve();
             } else {
-                return $.ajax({
+                var ajax = $.ajax({
                     method: "POST",
                     url: route,
                     contentType: "application/json",
                     // function to print all posted data
                     data: jsonData,
                     headers: getAuthenticationHeader()
-                }).done(function (response, status, xhr) {
+                });
+
+                ajax.done(function (response, status, xhr) {
                     console.log("RESPONSE: " + status + "\n" + JSON.stringify(response, null, 4));
                     if (xhr.status === 201) {
                         extractAuthorization(response);
                     }
                 });
+
+                return ajax;
             }
         });
     }
@@ -308,15 +312,39 @@ WorkerUI = (function () {
         template: require("../templates/answerview.html"),
 
         oninit: function () {
+            // set if skip answers allowed
+            this.set("skipAllowed", skipAnswerAllowed);
+            // initialise
+            this.set("required", false);
+
             this.on({
                 submit: function () {
+                    var data = this.get();
+
+                    // check if answer set and not empty
+                    if (data.toSubmit.answer === undefined || data.toSubmit.answer.length === 0) {
+                        this.set("required", true);
+                        return;
+                    }
+
+                    // not sure about that
+                    //if (data.answerType === "images") {
+                    //    Mime.checkIfImage(data.toSubmit.answer);
+                    //}
+
+                    // make copy to use reservation again if post fails
+                    var reservation = data.answerReservations.slice();
                     var toSubmit = {
-                        answer: this.get("toSubmit.answer"),
+                        answer: data.toSubmit.answer,
                         experiment: properties.experiment,
-                        reservation: this.get("answerReservations").pop()
+                        reservation: reservation.pop()
                     };
 
                     postSubmit(routes.answer, toSubmit).done(function () {
+                        // reset field required
+                        ractive.set("required", false);
+                        // update reservation if post succeeded
+                        ractive.set("reservation", reservation);
                         ractive.fire("submit.answer", ractive.get(), toSubmit);
                         // clear answer text field
                         ractive.set("toSubmit.answer", "");
@@ -326,9 +354,8 @@ WorkerUI = (function () {
                 },
 
                 skip: function () {
-                    skipAnswer = true;
+                    answerSkipped = true;
                     getNext()
-
                 }
             });
         }
@@ -342,7 +369,7 @@ WorkerUI = (function () {
 
         oninit: function () {
             // if answers were skipped dont allow skip ratings
-            this.set("skipAllowed", !skipAnswer);
+            this.set("skipAllowed", (!answerSkipped && skipRatingAllowed));
 
             // initialize answersToRate[i].required
             var answersToRate = this.get("answersToRate");
@@ -379,7 +406,7 @@ WorkerUI = (function () {
                 },
 
                 skip: function () {
-                    skipRating = true;
+                    ratingSkipped = true;
                     this.fire("next");
                 }
             });
@@ -544,18 +571,20 @@ WorkerUI = (function () {
         }
     }
 
-    const NO_AUTH = "no_authentication_set";
+    var NO_AUTH = "no_authentication_set";
     var properties = {
         preview: false,
         test: false,
         osParams: {}
     };
     var jwt = NO_AUTH;
-    var skipAnswer = false;
-    var skipRating = false;
+    var skipAnswerAllowed = true;
+    var skipRatingAllowed = true;
+    var answerSkipped = false;
+    var ratingSkipped = false;
     var preview = false;
     var routes = {};
-    const baseRoutes = {
+    var BASE_ROUTES = {
         email: "emails/",
         calibration: "calibrations",
         answer: "answers",
@@ -569,9 +598,9 @@ WorkerUI = (function () {
             properties.workerServiceURL += "/";
         }
 
-        for (var key in baseRoutes) {
-            if (baseRoutes.hasOwnProperty(key)) {
-                routes[key] = properties.workerServiceURL + baseRoutes[key];
+        for (var key in BASE_ROUTES) {
+            if (BASE_ROUTES.hasOwnProperty(key)) {
+                routes[key] = properties.workerServiceURL + BASE_ROUTES[key];
             }
         }
     }
@@ -624,10 +653,23 @@ WorkerUI = (function () {
             $(document).off("ajaxError");
             // set global ajax error handler
             $(document).ajaxError(function (event, request, settings, thrownError) {
-                alert(request.statusText
-                    + JSON.stringify(request.responseJSON, null, 4));
+                if (request.status === 0) {
+                    alert("Connection error: Could not reach server at " + settings.url + ".");
+                } else {
+                    alert(request.statusText + ":\n" + JSON.stringify(request.responseJSON, null, 4));
+                }
             });
             ractive = new DefaultView();
+        },
+
+        //starts loading the first "next view"
+        load: function () {
+            jwt = loadAuthorization();
+            if (properties.FORCE_VIEW) {
+                properties.workerServiceURL = "resources/";
+            }
+            properties.preview === true ? viewPreview() : getNext();
+
         },
 
         onSubmitAny: function (call) {
@@ -678,17 +720,6 @@ WorkerUI = (function () {
             }
         },
 
-
-        generateAuthHash: require("./generateAuthHash").generateAuthHash,
-
-        //starts loading the first "next view"
-        load: function () {
-            jwt = loadAuthorization();
-            if (properties.FORCE_VIEW) {
-                properties.workerServiceURL = "resources/";
-            }
-            properties.preview === true ? viewPreview() : getNext();
-
-        }
+        generateAuthHash: require("./generateAuthHash").generateAuthHash
     }
 })();
