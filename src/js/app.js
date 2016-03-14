@@ -8,11 +8,11 @@ WorkerUI = (function () {
     });
     // -------------- Requests & Helpers -------------------
     var types = loop(["email", "calibration", "answer", "rating", "finished"]);
-    const EMAIL = 1;
-    const CALIBRATION = 2;
-    const RATING = 3;
-    const ANSWER = 4;
-    const FINISHED = 5;
+    var EMAIL = 1;
+    var CALIBRATION = 2;
+    var RATING = 3;
+    var ANSWER = 4;
+    var FINISHED = 5;
 
     function loop(array) {
         var index = 0;
@@ -551,7 +551,7 @@ WorkerUI = (function () {
         }
     }
 
-    const NO_AUTH = "no_authentication_set";
+    var NO_AUTH = "no_authentication_set";
     var properties = {
         preview: false,
         test: false,
@@ -564,7 +564,7 @@ WorkerUI = (function () {
     var ratingSkipped = false;
     var preview = false;
     var routes = {};
-    const baseRoutes = {
+    var BASE_ROUTES = {
         email: "emails/",
         calibration: "calibrations",
         answer: "answers",
@@ -578,9 +578,9 @@ WorkerUI = (function () {
             properties.workerServiceURL += "/";
         }
 
-        for (var key in baseRoutes) {
-            if (baseRoutes.hasOwnProperty(key)) {
-                routes[key] = properties.workerServiceURL + baseRoutes[key];
+        for (var key in BASE_ROUTES) {
+            if (BASE_ROUTES.hasOwnProperty(key)) {
+                routes[key] = properties.workerServiceURL + BASE_ROUTES[key];
             }
         }
     }
