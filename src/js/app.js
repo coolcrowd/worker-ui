@@ -103,7 +103,6 @@ WorkerUI = (function () {
      * @param dataArray the data
      */
     function multipleSubmit(route, dataArray) {
-        // TODO proper handling
         var postSubmits = [];
 
         for (var i = 0; i < dataArray.length; i++) {
@@ -113,9 +112,6 @@ WorkerUI = (function () {
 
         // Use .apply onto array from deferreds
         var multipleAjax = $.when.apply($, postSubmits);
-        multipleAjax.then(function () {
-            console.log("multiple ajax finished");
-        });
         return multipleAjax;
     }
 
@@ -278,7 +274,6 @@ WorkerUI = (function () {
                     var toSubmit = this.parseCalibrations();
                     if (toSubmit !== null && toSubmit.length > 0) {
                         multipleSubmit(routes.calibration, toSubmit).done(function () {
-                            console.log("calib submit done");
                             ractive.fire("submit.calibration", ractive.get(), toSubmit);
                             getNext()
                         });
