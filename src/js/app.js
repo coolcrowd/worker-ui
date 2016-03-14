@@ -563,7 +563,8 @@ WorkerUI = (function () {
     var answerSkipped = false;
     var ratingSkipped = false;
     var preview = false;
-    var routes = {
+    var routes = {};
+    const baseRoutes = {
         email: "emails/",
         calibration: "calibrations",
         answer: "answers",
@@ -577,9 +578,9 @@ WorkerUI = (function () {
             properties.workerServiceURL += "/";
         }
 
-        for (var key in routes) {
-            if (routes.hasOwnProperty(key)) {
-                routes[key] = properties.workerServiceURL + routes[key];
+        for (var key in baseRoutes) {
+            if (baseRoutes.hasOwnProperty(key)) {
+                routes[key] = properties.workerServiceURL + baseRoutes[key];
             }
         }
     }
@@ -628,6 +629,8 @@ WorkerUI = (function () {
             loadStyles();
 
             this.currentViewType = "DEFAULT";
+            // clear global ajax error handler
+            $(document).off("ajaxError");
             // set global ajax error handler
             $(document).ajaxError(function (event, request, settings, thrownError) {
                 alert(request.statusText
