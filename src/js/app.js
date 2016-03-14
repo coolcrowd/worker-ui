@@ -327,9 +327,10 @@ WorkerUI = (function () {
                         return;
                     }
 
-                    if (data.answerType === "images") {
-                        Mime.checkIfImage(data.toSubmit.answer);
-                    }
+                    // not sure about that
+                    //if (data.answerType === "images") {
+                    //    Mime.checkIfImage(data.toSubmit.answer);
+                    //}
 
                     // make copy to use reservation again if post fails
                     var reservation = data.answerReservations.slice();
