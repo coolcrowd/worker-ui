@@ -65,26 +65,29 @@ WorkerUI = (function () {
     function postSubmit(route, data) {
         return identifyWorker().then(function () {
             var jsonData = JSON.stringify(data);
-
             console.log("POST: " + route + "\n" + jsonData);
             return jsonData;
         }).then(function (jsonData) {
             if (properties.NO_POST) {
                 return $.Deferred().resolve();
             } else {
-                return $.ajax({
+                var ajax = $.ajax({
                     method: "POST",
                     url: route,
                     contentType: "application/json",
                     // function to print all posted data
                     data: jsonData,
                     headers: getAuthenticationHeader()
-                }).done(function (response, status, xhr) {
+                });
+
+                ajax.done(function (response, status, xhr) {
                     console.log("RESPONSE: " + status + "\n" + JSON.stringify(response, null, 4));
                     if (xhr.status === 201) {
                         extractAuthorization(response);
                     }
                 });
+
+                return ajax;
             }
         });
     }
@@ -311,20 +314,36 @@ WorkerUI = (function () {
         oninit: function () {
             // set if skip answers allowed
             this.set("skipAllowed", skipAnswerAllowed);
+            // initialise
+            this.set("required", false);
 
             this.on({
                 submit: function () {
                     var data = this.get();
+
+                    // check if answer set and not empty
+                    if (data.toSubmit.answer === undefined || data.toSubmit.answer.length === 0) {
+                        this.set("required", true);
+                        return;
+                    }
+
                     if (data.answerType === "images") {
                         Mime.checkIfImage(data.toSubmit.answer);
                     }
+
+                    // make copy to use reservation again if post fails
+                    var reservation = data.answerReservations.slice();
                     var toSubmit = {
                         answer: data.toSubmit.answer,
                         experiment: properties.experiment,
-                        reservation: data.answerReservations.pop()
+                        reservation: reservation.pop()
                     };
 
                     postSubmit(routes.answer, toSubmit).done(function () {
+                        // reset field required
+                        ractive.set("required", false);
+                        // update reservation if post succeeded
+                        ractive.set("reservation", reservation);
                         ractive.fire("submit.answer", ractive.get(), toSubmit);
                         // clear answer text field
                         ractive.set("toSubmit.answer", "");
@@ -633,10 +652,23 @@ WorkerUI = (function () {
             $(document).off("ajaxError");
             // set global ajax error handler
             $(document).ajaxError(function (event, request, settings, thrownError) {
-                alert(request.statusText
-                    + JSON.stringify(request.responseJSON, null, 4));
+                if (request.status === 0) {
+                    alert("Connection error: Could not reach server at " + settings.url + ".");
+                } else {
+                    alert(request.statusText + ":\n" + JSON.stringify(request.responseJSON, null, 4));
+                }
             });
             ractive = new DefaultView();
+        },
+
+        //starts loading the first "next view"
+        load: function () {
+            jwt = loadAuthorization();
+            if (properties.FORCE_VIEW) {
+                properties.workerServiceURL = "resources/";
+            }
+            properties.preview === true ? viewPreview() : getNext();
+
         },
 
         onSubmitAny: function (call) {
@@ -687,17 +719,6 @@ WorkerUI = (function () {
             }
         },
 
-
-        generateAuthHash: require("./generateAuthHash").generateAuthHash,
-
-        //starts loading the first "next view"
-        load: function () {
-            jwt = loadAuthorization();
-            if (properties.FORCE_VIEW) {
-                properties.workerServiceURL = "resources/";
-            }
-            properties.preview === true ? viewPreview() : getNext();
-
-        }
+        generateAuthHash: require("./generateAuthHash").generateAuthHash
     }
 })();

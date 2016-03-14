@@ -26,6 +26,9 @@
         <label class="input-label">Answer</label>
         <textarea name="answer" value="{{toSubmit.answer}}" placeholder="Enter your answer here!"></textarea>
         {{/if}}
+        {{#if required}}
+        <span class="validation-error">The {{ answerType === "images" ? "image" : "answer" }} field must not be empty.</span>
+        {{/if}}
     </div>
 
 
