@@ -12,7 +12,6 @@
             <li>{{name}}</li>
         {{/each}}
         </ul>
-
     </div>
     {{/if}}
 
@@ -20,8 +19,8 @@
         {{#if answerType === "images"}}
         <label class="input-label">Answer</label>
         <input type="text" name="answer" value="{{toSubmit.answer}}" placeholder="Enter your image url here!">
-        <div class="image-center">
-            <img src="{{toSubmit.answer}}">
+        <div id="answer-image">
+            <img class="center" src="{{toSubmit.answer}}">
         </div>
         {{else}}
         <label class="input-label">Image</label>

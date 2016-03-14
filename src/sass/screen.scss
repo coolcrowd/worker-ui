@@ -132,41 +132,36 @@ pre {
 
 .image-container {
   position: relative;
-  height: 230px;
   @include clear-fix();
 
   div {
     float: left;
+    width: 50%;
   }
 
   img {
-    float: left;
-    background-repeat: no-repeat;
+    position: relative;
     max-height: 200px;
     width: auto;
   }
 
-  label {
-    float: left;
-    position: absolute;
-    bottom: 0;
+  a {
+    margin: 0 10px;
+    word-wrap: break-word;
   }
 }
 
-.image-center {
-  position: relative;
+#answer-image {
   height: 250px;
 
   img {
-    position: absolute;
-    display: table;
-    height: 250px;
-    top: 0;
-    right: 0;
-    left: 0;
-    bottom: 0;
-    margin: auto;
+    height: 100%;
   }
+}
+
+.center {
+    display: table;
+    margin: auto;
 }
 
 .key {
