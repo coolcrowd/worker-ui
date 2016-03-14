@@ -155,6 +155,7 @@ WorkerUI = (function () {
         if (typeof(Storage) !== "undefined") {
             sessionStorage.clear();
         }
+        jwt = NO_AUTH;
     }
 
     function getAuthenticationHeader() {
@@ -227,11 +228,10 @@ WorkerUI = (function () {
                         }
                         toSubmit.platformParameters = paramArray;
                     }
-                    postSubmit(routes.email + properties.platform, toSubmit)
-                        .done(function () {
-                            ractive.fire("submitEmail", ractive.get(), toSubmit);
-                            getNext()
-                        });
+                    postSubmit(routes.email + properties.platform, toSubmit).done(function () {
+                        ractive.fire("submit.email", ractive.get(), toSubmit);
+                        getNext()
+                    });
                 },
 
                 focus: function () {
@@ -274,7 +274,7 @@ WorkerUI = (function () {
                     var toSubmit = this.parseCalibrations();
                     if (toSubmit !== null && toSubmit.length > 0) {
                         multipleSubmit(routes.calibration, toSubmit).done(function () {
-                            ractive.fire("submitCalibration", ractive.get(), toSubmit);
+                            ractive.fire("submit.calibration", ractive.get(), toSubmit);
                             getNext()
                         });
                     }
@@ -325,7 +325,7 @@ WorkerUI = (function () {
                     };
 
                     postSubmit(routes.answer, toSubmit).done(function () {
-                        ractive.fire("submitAnswer", ractive.get(), toSubmit);
+                        ractive.fire("submit.answer", ractive.get(), toSubmit);
                         // clear answer text field
                         ractive.set("toSubmit.answer", "");
                         ractive.set("skipAllowed", true);
@@ -373,7 +373,7 @@ WorkerUI = (function () {
                     if (toSubmit !== null && toSubmit.length > 0) {
                         ractive.neededSubmitsCount -= toSubmit.length;
                         multipleSubmit(routes.rating, toSubmit).done(function () {
-                            ractive.fire("submitRating", ractive.get(), toSubmit);
+                            ractive.fire("submit.rating", ractive.get(), toSubmit);
                             if (ractive.neededSubmitsCount === 0) {
                                 getNext()
                             }
@@ -458,7 +458,7 @@ WorkerUI = (function () {
     function viewNext(next) {
         // TODO evaluate if view should always be reloaded
         if (false) {
-        //if (next["type"] === currentViewType) {
+            //if (next["type"] === currentViewType) {
             var old = ractive.get();
             ractive.set(mergeObject(old, next));
         } else {
@@ -532,19 +532,19 @@ WorkerUI = (function () {
     function registerHooks(ractive) {
         // how can this be done cleaner?
         if (hooks.any !== undefined) {
-            ractive.on("submit", hooks.any);
+            ractive.on("submit.*", hooks.any);
         }
         if (hooks.email !== undefined) {
-            ractive.on("submitEmail", hooks.email);
+            ractive.on("submit.email", hooks.email);
         }
         if (hooks.calibration !== undefined) {
-            ractive.on("submitCalibration", hooks.calibration);
+            ractive.on("submit.calibration", hooks.calibration);
         }
         if (hooks.answer !== undefined) {
-            ractive.on("submitAnswer", hooks.answer);
+            ractive.on("submit.answer", hooks.answer);
         }
         if (hooks.rating !== undefined) {
-            ractive.on("submitRating", hooks.rating);
+            ractive.on("submit.rating", hooks.rating);
         }
         if (hooks.finished !== undefined) {
             ractive.on("finished", hooks.finished);
@@ -674,6 +674,14 @@ WorkerUI = (function () {
 
         clearWorker: function () {
             clearAuthorization();
+        },
+
+        getWorker: function () {
+            if (jwt === NO_AUTH) {
+                return loadAuthorization();
+            } else {
+                return jwt;
+            }
         },
 
 
