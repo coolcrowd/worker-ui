@@ -47,17 +47,21 @@ WorkerUI = (function () {
                 nextParams.rating = "skip";
             }
         }).then(function () {
-                return $.ajax({
+                var ajax = $.ajax({
                     dataType: "json",
                     url: nextUrl,
                     data: nextParams,
                     headers: getAuthenticationHeader()
-                }).done(function (data, status) {
+                });
+
+                ajax.done(function (data, status) {
                     if (status === "success") {
                         extractAuthorization(data);
                         viewNext(data);
                     }
                 });
+
+                return ajax;
             }
         );
     }
@@ -100,22 +104,19 @@ WorkerUI = (function () {
      */
     function multipleSubmit(route, dataArray) {
         // TODO proper handling
-        var defer = $.Deferred();
-        var submitPromise = {};
+        var postSubmits = [];
 
-        var posts = [];
         for (var i = 0; i < dataArray.length; i++) {
-            posts.push(postSubmit(route, dataArray[i]));
+            // Push promise to 'deferreds' array
+            postSubmits.push(postSubmit(route, dataArray[i]));
         }
-        // as long as there are pending requests, wait
-        for (i = posts.length; i >= 0; i--) {
-            $.when(posts[i]).done(function () {
-                posts.pop()
-            });
-        }
-        defer.resolve();
 
-        return defer.promise(submitPromise);
+        // Use .apply onto array from deferreds
+        var multipleAjax = $.when.apply($, postSubmits);
+        multipleAjax.then(function () {
+            console.log("multiple ajax finished");
+        });
+        return multipleAjax;
     }
 
 // ------------------ Worker Handling ---------------------
@@ -277,6 +278,7 @@ WorkerUI = (function () {
                     var toSubmit = this.parseCalibrations();
                     if (toSubmit !== null && toSubmit.length > 0) {
                         multipleSubmit(routes.calibration, toSubmit).done(function () {
+                            console.log("calib submit done");
                             ractive.fire("submit.calibration", ractive.get(), toSubmit);
                             getNext()
                         });
@@ -344,7 +346,7 @@ WorkerUI = (function () {
                         // reset field required
                         ractive.set("required", false);
                         // update reservation if post succeeded
-                        ractive.set("reservation", reservation);
+                        ractive.set("answerReservations", reservation);
                         ractive.fire("submit.answer", ractive.get(), toSubmit);
                         // clear answer text field
                         ractive.set("toSubmit.answer", "");
@@ -477,10 +479,8 @@ WorkerUI = (function () {
 
     function viewNext(next) {
         // TODO evaluate if view should always be reloaded
-        if (false) {
-            //if (next["type"] === currentViewType) {
-            var old = ractive.get();
-            ractive.set(mergeObject(old, next));
+        if (next["type"] === currentViewType) {
+            ractive.merge("", next);
         } else {
             ractive.teardown();
             switch (next["type"]) {
