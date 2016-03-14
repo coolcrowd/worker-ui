@@ -40,10 +40,10 @@ WorkerUI = (function () {
         var nextParams = {};
         return identifyWorker().then(function () {
             nextParams = properties.osParams;
-            if (skipAnswer) {
+            if (answerSkipped) {
                 nextParams.answer = "skip";
             }
-            if (skipRating) {
+            if (ratingSkipped) {
                 nextParams.rating = "skip";
             }
         }).then(function () {
@@ -303,6 +303,9 @@ WorkerUI = (function () {
         template: require("../templates/answerview.html"),
 
         oninit: function () {
+            // set if skip answers allowed
+            this.set("skipAllowed", skipAnswerAllowed);
+
             this.on({
                 submit: function () {
                     var data = this.get();
@@ -325,9 +328,8 @@ WorkerUI = (function () {
                 },
 
                 skip: function () {
-                    skipAnswer = true;
+                    answerSkipped = true;
                     getNext()
-
                 }
             });
         }
@@ -341,7 +343,7 @@ WorkerUI = (function () {
 
         oninit: function () {
             // if answers were skipped dont allow skip ratings
-            this.set("skipAllowed", !skipAnswer);
+            this.set("skipAllowed", (!answerSkipped && skipRatingAllowed));
 
             // initialize answersToRate[i].required
             var answersToRate = this.get("answersToRate");
@@ -378,7 +380,7 @@ WorkerUI = (function () {
                 },
 
                 skip: function () {
-                    skipRating = true;
+                    ratingSkipped = true;
                     this.fire("next");
                 }
             });
@@ -550,8 +552,10 @@ WorkerUI = (function () {
         osParams: {}
     };
     var jwt = NO_AUTH;
-    var skipAnswer = false;
-    var skipRating = false;
+    var skipAnswerAllowed = true;
+    var skipRatingAllowed = true;
+    var answerSkipped = false;
+    var ratingSkipped = false;
     var preview = false;
     var routes = {
         email: "emails/",
