@@ -29,6 +29,10 @@
             width: 95%;
             resize: vertical;
         }
+
+        #worker {
+            width: 95%;
+        }
     </style>
 </head>
 
@@ -40,7 +44,12 @@
             <textarea id="properties" wrap="soft" rows="20"></textarea>
         </label>
         <button onclick="init(JSON.parse(document.getElementById('properties').value))">Load view</button>
-        <button onclick="WorkerUI.clearWorker()">Clear worker</button>
+        <button onclick="WorkerUI.clearWorker(); refreshWorker()">Clear worker</button>
+        <br>
+        <label>
+            Worker Authentication
+            <input type="text" id="worker" readonly>
+        </label>
     </div>
     <div id="ractive-container"></div>
 </div>
@@ -48,8 +57,9 @@
 <script id="worker_ui" src="worker_ui.js"></script>
 
 <script>
+    var worker;
     var defaultProperties = {
-        workerServiceURL: "${WS_URL}",
+        workerServiceURL: "http://localhost:3333", //"${WS_URL}",
         platform: "dummydummy",
         experiment: 1,
 
@@ -66,9 +76,15 @@
             //assignmentId: 1234
         }
     };
-
     // set properties in view
     document.getElementById('properties').value = JSON.stringify(defaultProperties, null, 4);
+
+    refreshWorker();
+
+    function refreshWorker() {
+        worker = WorkerUI.getWorker();
+        document.getElementById('worker').value = worker;
+    }
 
     // initialize with properties
     function init(properties) {
@@ -84,9 +100,8 @@
         WorkerUI.onSubmitCalibration(function (viewData, submittedData) {
             console.log("calibration submitted" + JSON.stringify(submittedData));
         });
-        var answerArray = [];
+
         WorkerUI.onSubmitAnswer(function (viewData, submittedData) {
-            answerArray.push(submittedData.answer);
             console.log("viewData: \n" + JSON.stringify(viewData, null, 4));
             console.log("submittedData: \n" + JSON.stringify(submittedData, null, 4));
         });
@@ -95,12 +110,15 @@
         });
         WorkerUI.onSubmitAny(function (viewData, submittedData) {
             console.log("Something was submitted");
+            refreshWorker();
         });
         WorkerUI.onFinished(function () {
 
         });
 
         WorkerUI.load();
+
+        refreshWorker();
     }
 
 </script>
