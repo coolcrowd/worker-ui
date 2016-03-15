@@ -68,6 +68,10 @@ WorkerUI = (function () {
 
     function postSubmit(route, data) {
         return identifyWorker().then(function () {
+            // in case of email
+            if (data.email !== undefined) {
+                data = insertOsParameters(data);
+            }
             var jsonData = JSON.stringify(data);
             console.log("POST: " + route + "\n" + jsonData);
             return jsonData;
@@ -114,6 +118,26 @@ WorkerUI = (function () {
         var multipleAjax = $.when.apply($, postSubmits);
         return multipleAjax;
     }
+
+    function insertOsParameters(data) {
+        if (properties.osParams) {
+            var paramArray = [];
+            var pair = {};
+            for (var param in properties.osParams) {
+                if (properties.osParams.hasOwnProperty(param)) {
+                    var valueArray = [];
+                    valueArray.push(properties.osParams[param]);
+                    pair.key = param;
+                    pair.values = valueArray;
+                    paramArray.push(pair);
+                    pair = {};
+                }
+            }
+            data.platformParameters = paramArray;
+        }
+        return data;
+    }
+
 
 // ------------------ Worker Handling ---------------------
 
@@ -200,34 +224,6 @@ WorkerUI = (function () {
                 submit: function () {
                     var toSubmit = this.get("toSubmit");
 
-                    /**
-                     *  parse into the following scheme
-                     *  [
-                     *      {
-                     *          key: workerId,
-                     *          values: [5]
-                     *      },
-                     *      {
-                     *          key: assignmentId,
-                     *          values: [121]
-                     *      }
-                     *  ]
-                     */
-                    if (properties.osParams) {
-                        var paramArray = [];
-                        var pair = {};
-                        for (var param in properties.osParams) {
-                            if (properties.osParams.hasOwnProperty(param)) {
-                                var valueArray = [];
-                                valueArray.push(properties.osParams[param]);
-                                pair.key = param;
-                                pair.values = valueArray;
-                                paramArray.push(pair);
-                                pair = {};
-                            }
-                        }
-                        toSubmit.platformParameters = paramArray;
-                    }
                     postSubmit(routes.email + properties.platform, toSubmit).done(function () {
                         ractive.fire("submit.email", ractive.get(), toSubmit);
                         getNext()
@@ -256,6 +252,7 @@ WorkerUI = (function () {
             var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
             return re.test(email);
         }
+
     });
 
     var CalibrationView = DefaultView.extend({
