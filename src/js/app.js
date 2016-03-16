@@ -307,51 +307,59 @@ WorkerUI = (function () {
 
         oninit: function () {
             // set if skip answers allowed
-            this.set("skipAllowed", skipAnswerAllowed);
-            // initialise
-            this.set("required", false);
+            this.set({
+                    skipAllowed: skipAnswerAllowed,
+                    // initialise
+                    required: false,
 
-            this.on({
-                submit: function () {
-                    var data = this.get();
-
-                    // check if answer set and not empty
-                    if (data.toSubmit.answer === undefined || data.toSubmit.answer.length === 0) {
-                        this.set("required", true);
-                        return;
+                    answerTypeMatches: function (type) {
+                        var answerType = this.get("answerType");
+                        // true if answerType begins with specified type.
+                        return answerType.indexOf(type) === 0;
                     }
+                });
 
-                    // not sure about that
-                    //if (data.answerType === "images") {
-                    //    Mime.checkIfImage(data.toSubmit.answer);
-                    //}
+                this.on({
+                    submit: function () {
+                        var data = this.get();
 
-                    // make copy to use reservation again if post fails
-                    var reservation = data.answerReservations.slice();
-                    var toSubmit = {
-                        answer: data.toSubmit.answer,
-                        experiment: properties.experiment,
-                        reservation: reservation.pop()
-                    };
+                        // check if answer set and not empty
+                        if (data.toSubmit.answer === undefined || data.toSubmit.answer.length === 0) {
+                            this.set("required", true);
+                            return;
+                        }
 
-                    postSubmit(routes.answer, toSubmit).done(function () {
-                        // reset field required
-                        ractive.set("required", false);
-                        // update reservation if post succeeded
-                        ractive.set("answerReservations", reservation);
-                        ractive.fire("submit.answer", ractive.get(), toSubmit);
-                        // clear answer text field
-                        ractive.set("toSubmit.answer", "");
-                        ractive.set("skipAllowed", true);
+                        // not sure about that
+                        //if (data.answerType === "images") {
+                        //    Mime.checkIfImage(data.toSubmit.answer);
+                        //}
+
+                        // make copy to use reservation again if post fails
+                        var reservation = data.answerReservations.slice();
+                        var toSubmit = {
+                            answer: data.toSubmit.answer,
+                            experiment: properties.experiment,
+                            reservation: reservation.pop()
+                        };
+
+                        postSubmit(routes.answer, toSubmit).done(function () {
+                            // reset field required
+                            ractive.set("required", false);
+                            // update reservation if post succeeded
+                            ractive.set("answerReservations", reservation);
+                            ractive.fire("submit.answer", ractive.get(), toSubmit);
+                            // clear answer text field
+                            ractive.set("toSubmit.answer", "");
+                            ractive.set("skipAllowed", true);
+                            getNext()
+                        });
+                    },
+
+                    skip: function () {
+                        answerSkipped = true;
                         getNext()
-                    });
-                },
-
-                skip: function () {
-                    answerSkipped = true;
-                    getNext()
-                }
-            });
+                    }
+                });
         }
     });
 
