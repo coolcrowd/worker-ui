@@ -1,5 +1,11 @@
-    <span>You have finished all tasks. Thank you for participating!</span><br>
+<div class="content input-view">
+    <h1>Finished</h1>
+    <p>Thank you for participating!</p>
     {{#if nono}}
     There are <b>{{nono}}</b> tasks for you!
     {{/if}}
-    <button on-click="next">Next!</button>
+
+    <div class="actions actions-left actions-bottom">
+        <button class="action action-constructive" on-click="next">Next!</button>
+    </div>
+</div>
