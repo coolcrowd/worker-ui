@@ -1,3 +1,7 @@
+<div id="payment">
+    <p></p>
+</div>
+
 <div id="ractive-container"></div>
 <div id="id-task" class="max-width no-display">
     <div class="content">
@@ -11,7 +15,6 @@
 
 <script id="worker_ui" src="/worker_ui.js"></script>
 <script>
-
     function doIdTask(idTasks) {
         var idTask = idTasks[0];
         var authHash = WorkerUI.generateAuthHash();
@@ -47,6 +50,10 @@
 
     pybossa.presentTask(function (task, deferred) {
         if (!$.isEmptyObject(task) && (task.info.type === "experiment")) {
+            $("#payment").children("p").text(
+                    "Base Payment: 0." + task.info.paymentBase + " USD"
+            );
+
             WorkerUI.init(properties = {
                 workerServiceURL: task.info.url,
                 platform: task.info.platform,
@@ -61,13 +68,13 @@
                 });
             });
 
-
             WorkerUI.beforeIdentifyWorker(function () {
                 return doIdTask(task.info.idTasks);
             });
 
             WorkerUI.load();
         } else {
+            $("#payment").hide();
             $("#id-task").show();
         }
     });
