@@ -3,7 +3,7 @@
   "title": "Mean Tweet",
   "description": "This is the description of the example-task. It specifies what the worker has to do.",
   "answerReservations": [2, 4, 3],
-  "answerType": "images",
+  "answerType": "images/*",
   "pictures": [
     {
       "url": "http://learn.ractivejs.org/gifs/problem.gif",

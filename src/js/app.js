@@ -68,6 +68,10 @@ WorkerUI = (function () {
 
     function postSubmit(route, data) {
         return identifyWorker().then(function () {
+            // in case of email
+            if (data.email !== undefined) {
+                data = insertOsParameters(data);
+            }
             var jsonData = JSON.stringify(data);
             console.log("POST: " + route + "\n" + jsonData);
             return jsonData;
@@ -114,6 +118,26 @@ WorkerUI = (function () {
         var multipleAjax = $.when.apply($, postSubmits);
         return multipleAjax;
     }
+
+    function insertOsParameters(data) {
+        if (properties.osParams) {
+            var paramArray = [];
+            var pair = {};
+            for (var param in properties.osParams) {
+                if (properties.osParams.hasOwnProperty(param)) {
+                    var valueArray = [];
+                    valueArray.push(properties.osParams[param]);
+                    pair.key = param;
+                    pair.values = valueArray;
+                    paramArray.push(pair);
+                    pair = {};
+                }
+            }
+            data.platformParameters = paramArray;
+        }
+        return data;
+    }
+
 
 // ------------------ Worker Handling ---------------------
 
@@ -200,34 +224,6 @@ WorkerUI = (function () {
                 submit: function () {
                     var toSubmit = this.get("toSubmit");
 
-                    /**
-                     *  parse into the following scheme
-                     *  [
-                     *      {
-                     *          key: workerId,
-                     *          values: [5]
-                     *      },
-                     *      {
-                     *          key: assignmentId,
-                     *          values: [121]
-                     *      }
-                     *  ]
-                     */
-                    if (properties.osParams) {
-                        var paramArray = [];
-                        var pair = {};
-                        for (var param in properties.osParams) {
-                            if (properties.osParams.hasOwnProperty(param)) {
-                                var valueArray = [];
-                                valueArray.push(properties.osParams[param]);
-                                pair.key = param;
-                                pair.values = valueArray;
-                                paramArray.push(pair);
-                                pair = {};
-                            }
-                        }
-                        toSubmit.platformParameters = paramArray;
-                    }
                     postSubmit(routes.email + properties.platform, toSubmit).done(function () {
                         ractive.fire("submit.email", ractive.get(), toSubmit);
                         getNext()
@@ -256,6 +252,7 @@ WorkerUI = (function () {
             var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
             return re.test(email);
         }
+
     });
 
     var CalibrationView = DefaultView.extend({
@@ -309,11 +306,6 @@ WorkerUI = (function () {
         template: require("../templates/answerview.html"),
 
         oninit: function () {
-            // set if skip answers allowed
-            this.set("skipAllowed", skipAnswerAllowed);
-            // initialise
-            this.set("required", false);
-
             this.on({
                 submit: function () {
                     var data = this.get();
@@ -358,42 +350,34 @@ WorkerUI = (function () {
         }
     });
 
+    function newAnswerView(data) {
+        data.skipAllowed = skipAnswerAllowed;
+        data.required = false;
+
+        data.answerTypeMatches = function (type) {
+            var answerType = this.get("answerType");
+            // true if answerType begins with specified type.
+            return answerType.indexOf(type) === 0;
+        };
+
+        return new AnswerView({
+            data: data
+        });
+    }
+
 
     var RatingView = DefaultView.extend({
         template: require("../templates/ratingview.html"),
 
-        neededSubmitsCount: 0,
-
         oninit: function () {
-            // if answers were skipped dont allow skip ratings
-            this.set("skipAllowed", (!answerSkipped && skipRatingAllowed));
-
-            // initialize answersToRate[i].required
-            var answersToRate = this.get("answersToRate");
-            var ratings = [];
-            for (var i = 0; i < answersToRate.length; i++) {
-                answersToRate[i].required = false;
-                answersToRate[i].hidden = false;
-                ratings.push(null);
-            }
-            this.set("answersToRate", answersToRate);
-            this.set("toSubmit.ratings", ratings);
-
-            this.neededSubmitsCount = answersToRate.length;
-
             // register events
             this.on({
                 submit: function () {
-                    var toSubmit;
-
-                    toSubmit = this.parseRatings();
+                    var toSubmit = this.parseRatings();
                     if (toSubmit !== null && toSubmit.length > 0) {
-                        ractive.neededSubmitsCount -= toSubmit.length;
                         multipleSubmit(routes.rating, toSubmit).done(function () {
                             ractive.fire("submit.rating", ractive.get(), toSubmit);
-                            if (ractive.neededSubmitsCount === 0) {
-                                getNext()
-                            }
+                            getNext()
                         });
                     }
                 },
@@ -424,6 +408,7 @@ WorkerUI = (function () {
             var scrolled = false;
             for (var i = 0; i < answersToRate.length; i++) {
                 if (ratings === undefined || ratings[i] === undefined) {
+                    // TODO handle case when not all ratings are set
                     // mark missing rating
                     ractive.animate("answersToRate[" + i + "].required", true, {
                         easing: "easeIn",
@@ -446,13 +431,36 @@ WorkerUI = (function () {
                     ratedAnswer.feedback = feedbacks[i];
                     ratedAnswer.constraints = constraints[i];
                     toSubmit.push(ratedAnswer);
-                    // hide rated answers
-                    //ractive.set("answersToRate[" + i + "].hidden", true);
                 }
             }
             return toSubmit;
         }
     });
+    function newRatingView(data) {
+        // initialise data
+        if (data.constraints === undefined || data.constraints.length === 0) {
+            data.constraints = [{name: undefined, id: undefined}];
+        }
+
+        // if answers were skipped don't allow skip ratings
+        data.skipAllowed = (!answerSkipped && skipRatingAllowed);
+
+        // initialize answersToRate[i].required
+        var answersToRate = data.answersToRate;
+        var ratings = [];
+        for (var i = 0; i < answersToRate.length; i++) {
+            answersToRate[i].required = false;
+            ratings.push(null);
+        }
+        data.answersToRate = answersToRate;
+        data.toSubmit = {};
+        data.toSubmit.ratings = ratings;
+
+        data.neededSubmitsCount = answersToRate.length;
+        return new RatingView({
+            data: data
+        });
+    }
 
     var FinishedView = DefaultView.extend({
         template: require("../templates/finishedview.html"),
@@ -490,14 +498,10 @@ WorkerUI = (function () {
                     });
                     break;
                 case "ANSWER":
-                    ractive = new AnswerView({
-                        data: next
-                    });
+                    ractive = newAnswerView(next);
                     break;
                 case "RATING":
-                    ractive = new RatingView({
-                        data: next
-                    });
+                    ractive = newRatingView(next);
                     break;
                 case "FINISHED":
                     ractive = new FinishedView({
