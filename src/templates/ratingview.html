@@ -20,7 +20,8 @@
                     {{/each}}
                 </div>
             </div>
-            {{#if constraints[0] }}
+
+            {{#if constraints[0].name !== undefined }}
             <div class="constraints-container">
                 <label class="input-label">Constraints</label>
                 <p class="input-help">
@@ -38,9 +39,9 @@
                     </li>
                     {{/each}}
                 </ul>
-
             </div>
             {{/if}}
+
             <div class="feedback-container">
                 <label class="input-label">Feedback</label>
                 <p class="input-help">You can leave a feedback for the author.</p>

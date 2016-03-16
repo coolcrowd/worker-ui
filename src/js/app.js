@@ -306,97 +306,80 @@ WorkerUI = (function () {
         template: require("../templates/answerview.html"),
 
         oninit: function () {
-            // set if skip answers allowed
-            this.set({
-                    skipAllowed: skipAnswerAllowed,
-                    // initialise
-                    required: false,
+            this.on({
+                submit: function () {
+                    var data = this.get();
 
-                    answerTypeMatches: function (type) {
-                        var answerType = this.get("answerType");
-                        // true if answerType begins with specified type.
-                        return answerType.indexOf(type) === 0;
+                    // check if answer set and not empty
+                    if (data.toSubmit.answer === undefined || data.toSubmit.answer.length === 0) {
+                        this.set("required", true);
+                        return;
                     }
-                });
 
-                this.on({
-                    submit: function () {
-                        var data = this.get();
+                    // not sure about that
+                    //if (data.answerType === "images") {
+                    //    Mime.checkIfImage(data.toSubmit.answer);
+                    //}
 
-                        // check if answer set and not empty
-                        if (data.toSubmit.answer === undefined || data.toSubmit.answer.length === 0) {
-                            this.set("required", true);
-                            return;
-                        }
+                    // make copy to use reservation again if post fails
+                    var reservation = data.answerReservations.slice();
+                    var toSubmit = {
+                        answer: data.toSubmit.answer,
+                        experiment: properties.experiment,
+                        reservation: reservation.pop()
+                    };
 
-                        // not sure about that
-                        //if (data.answerType === "images") {
-                        //    Mime.checkIfImage(data.toSubmit.answer);
-                        //}
-
-                        // make copy to use reservation again if post fails
-                        var reservation = data.answerReservations.slice();
-                        var toSubmit = {
-                            answer: data.toSubmit.answer,
-                            experiment: properties.experiment,
-                            reservation: reservation.pop()
-                        };
-
-                        postSubmit(routes.answer, toSubmit).done(function () {
-                            // reset field required
-                            ractive.set("required", false);
-                            // update reservation if post succeeded
-                            ractive.set("answerReservations", reservation);
-                            ractive.fire("submit.answer", ractive.get(), toSubmit);
-                            // clear answer text field
-                            ractive.set("toSubmit.answer", "");
-                            ractive.set("skipAllowed", true);
-                            getNext()
-                        });
-                    },
-
-                    skip: function () {
-                        answerSkipped = true;
+                    postSubmit(routes.answer, toSubmit).done(function () {
+                        // reset field required
+                        ractive.set("required", false);
+                        // update reservation if post succeeded
+                        ractive.set("answerReservations", reservation);
+                        ractive.fire("submit.answer", ractive.get(), toSubmit);
+                        // clear answer text field
+                        ractive.set("toSubmit.answer", "");
+                        ractive.set("skipAllowed", true);
                         getNext()
-                    }
-                });
+                    });
+                },
+
+                skip: function () {
+                    answerSkipped = true;
+                    getNext()
+                }
+            });
         }
     });
+
+    function newAnswerView(data) {
+        data.skipAllowed = skipAnswerAllowed;
+        data.required = false;
+
+        data.answerTypeMatches = function (type) {
+            var answerType = this.get("answerType");
+            // true if answerType begins with specified type.
+            return answerType.indexOf(type) === 0;
+        };
+
+        return new AnswerView({
+            data: data
+        });
+    }
 
 
     var RatingView = DefaultView.extend({
         template: require("../templates/ratingview.html"),
 
-        neededSubmitsCount: 0,
-
         oninit: function () {
-            // if answers were skipped dont allow skip ratings
-            this.set("skipAllowed", (!answerSkipped && skipRatingAllowed));
-
-            // initialize answersToRate[i].required
-            var answersToRate = this.get("answersToRate");
-            var ratings = [];
-            for (var i = 0; i < answersToRate.length; i++) {
-                answersToRate[i].required = false;
-                answersToRate[i].hidden = false;
-                ratings.push(null);
-            }
-            this.set("answersToRate", answersToRate);
-            this.set("toSubmit.ratings", ratings);
-
-            this.neededSubmitsCount = answersToRate.length;
-
             // register events
             this.on({
                 submit: function () {
-                    var toSubmit;
-
-                    toSubmit = this.parseRatings();
+                    var toSubmit = this.parseRatings();
                     if (toSubmit !== null && toSubmit.length > 0) {
-                        ractive.neededSubmitsCount -= toSubmit.length;
+                        var neededSubmitsCount = ractive.get("neededSubmitsCount");
+                        neededSubmitsCount -= toSubmit.length;
                         multipleSubmit(routes.rating, toSubmit).done(function () {
                             ractive.fire("submit.rating", ractive.get(), toSubmit);
-                            if (ractive.neededSubmitsCount === 0) {
+                            if (neededSubmitsCount === 0) {
                                 getNext()
                             }
                         });
@@ -458,6 +441,32 @@ WorkerUI = (function () {
             return toSubmit;
         }
     });
+    function newRatingView(data) {
+        // initialise data
+        if (data.constraints === undefined || data.constraints.length === 0) {
+            data.constraints = [{name: undefined, id: undefined}];
+        }
+
+        // if answers were skipped don't allow skip ratings
+        data.skipAllowed = (!answerSkipped && skipRatingAllowed);
+
+        // initialize answersToRate[i].required
+        var answersToRate = data.answersToRate;
+        var ratings = [];
+        for (var i = 0; i < answersToRate.length; i++) {
+            answersToRate[i].required = false;
+            answersToRate[i].hidden = false;
+            ratings.push(null);
+        }
+        data.answersToRate = answersToRate;
+        data.toSubmit = {};
+        data.toSubmit.ratings = ratings;
+
+        data.neededSubmitsCount = answersToRate.length;
+        return new RatingView({
+            data: data
+        });
+    }
 
     var FinishedView = DefaultView.extend({
         template: require("../templates/finishedview.html"),
@@ -495,14 +504,10 @@ WorkerUI = (function () {
                     });
                     break;
                 case "ANSWER":
-                    ractive = new AnswerView({
-                        data: next
-                    });
+                    ractive = newAnswerView(next);
                     break;
                 case "RATING":
-                    ractive = new RatingView({
-                        data: next
-                    });
+                    ractive = newRatingView(next);
                     break;
                 case "FINISHED":
                     ractive = new FinishedView({
