@@ -2,53 +2,51 @@
     {{>experimentHeader}}
     <ul class="rating-list">
         {{#each answersToRate:i}}
-        {{# !answersToRate[i].hidden }}
-        <li class="rating" outro="fade" id="rating-{{i}}">
-            <div class="answer-container">
-                <label class="input-label">Answer to rate</label>
-                <p class="">{{answer}}</p>
-            </div>
-            <div class="rating-container">
-                <label class="input-label">Rating</label>
-                <div class='{{ answersToRate[i].required ? "required" : "" }}'>
-                    {{#each ratingOptions:j}}
-                    <label on-click="removeRequired:{{i}}">
-                        <input type="radio" name="{{~/toSubmit.ratings[i]}}"
-                               id="{{answersToRate[i].id}}-ratingId-{{i}}-{{j}}" value={{value}}>
-                        {{description}}
-                    </label>
-                    {{/each}}
+            <li class="rating" outro="fade" id="rating-{{i}}">
+                <div class="answer-container">
+                    <label class="input-label">Answer to rate</label>
+                    <p class="">{{answer}}</p>
                 </div>
-            </div>
-
-            {{#if constraints[0].name !== undefined }}
-            <div class="constraints-container">
-                <label class="input-label">Constraints</label>
-                <p class="input-help">
-                    The answer has the following constraints.
-                    Check all that are violated and do not apply for this answer.
-                </p>
-                <ul class="checkbox-list">
-                    {{#each constraints:j}}
-                    <li>
-                        <label>
-                            <input type="checkbox" name="{{~/toSubmit.constraints[i]}}"
-                                   id="{{answersToRate[i].id}}-calibrationId-{{i}}-{{j}}" value="{{id}}">
-                            {{name}}
+                <div class="rating-container">
+                    <label class="input-label">Rating</label>
+                    <div class='{{ answersToRate[i].required ? "required" : "" }}'>
+                        {{#each ratingOptions:j}}
+                        <label on-click="removeRequired:{{i}}">
+                            <input type="radio" name="{{~/toSubmit.ratings[i]}}"
+                                   id="{{answersToRate[i].id}}-ratingId-{{i}}-{{j}}" value={{value}}>
+                            {{description}}
                         </label>
-                    </li>
-                    {{/each}}
-                </ul>
-            </div>
-            {{/if}}
+                        {{/each}}
+                    </div>
+                </div>
 
-            <div class="feedback-container">
-                <label class="input-label">Feedback</label>
-                <p class="input-help">You can leave a feedback for the author.</p>
-                <textarea name="feedback" value="{{toSubmit.feedbacks[i]}}"></textarea>
-            </div>
-        </li>
-        {{/}}
+                {{#if constraints[0].name !== undefined }}
+                <div class="constraints-container">
+                    <label class="input-label">Constraints</label>
+                    <p class="input-help">
+                        The answer has the following constraints.
+                        Check all that are violated and do not apply for this answer.
+                    </p>
+                    <ul class="checkbox-list">
+                        {{#each constraints:j}}
+                        <li>
+                            <label>
+                                <input type="checkbox" name="{{~/toSubmit.constraints[i]}}"
+                                       id="{{answersToRate[i].id}}-calibrationId-{{i}}-{{j}}" value="{{id}}">
+                                {{name}}
+                            </label>
+                        </li>
+                        {{/each}}
+                    </ul>
+                </div>
+                {{/if}}
+
+                <div class="feedback-container">
+                    <label class="input-label">Feedback</label>
+                    <p class="input-help">You can leave a feedback for the author.</p>
+                    <textarea name="feedback" value="{{toSubmit.feedbacks[i]}}"></textarea>
+                </div>
+            </li>
         {{/each answersToRate}}
     </ul>
 

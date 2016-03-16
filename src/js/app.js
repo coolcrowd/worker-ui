@@ -375,13 +375,9 @@ WorkerUI = (function () {
                 submit: function () {
                     var toSubmit = this.parseRatings();
                     if (toSubmit !== null && toSubmit.length > 0) {
-                        var neededSubmitsCount = ractive.get("neededSubmitsCount");
-                        neededSubmitsCount -= toSubmit.length;
                         multipleSubmit(routes.rating, toSubmit).done(function () {
                             ractive.fire("submit.rating", ractive.get(), toSubmit);
-                            if (neededSubmitsCount === 0) {
-                                getNext()
-                            }
+                            getNext()
                         });
                     }
                 },
@@ -412,6 +408,7 @@ WorkerUI = (function () {
             var scrolled = false;
             for (var i = 0; i < answersToRate.length; i++) {
                 if (ratings === undefined || ratings[i] === undefined) {
+                    // TODO handle case when not all ratings are set
                     // mark missing rating
                     ractive.animate("answersToRate[" + i + "].required", true, {
                         easing: "easeIn",
@@ -434,8 +431,6 @@ WorkerUI = (function () {
                     ratedAnswer.feedback = feedbacks[i];
                     ratedAnswer.constraints = constraints[i];
                     toSubmit.push(ratedAnswer);
-                    // hide rated answers
-                    //ractive.set("answersToRate[" + i + "].hidden", true);
                 }
             }
             return toSubmit;
@@ -455,7 +450,6 @@ WorkerUI = (function () {
         var ratings = [];
         for (var i = 0; i < answersToRate.length; i++) {
             answersToRate[i].required = false;
-            answersToRate[i].hidden = false;
             ratings.push(null);
         }
         data.answersToRate = answersToRate;
