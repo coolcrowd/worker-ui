@@ -5,7 +5,13 @@
             <li class="rating" outro="fade" id="rating-{{i}}">
                 <div class="answer-container">
                     <label class="input-label">Answer to rate</label>
-                    <p class="">{{answer}}</p>
+                    {{#if answerTypeMatches:images }}
+                        <div id="rating-image">
+                            <img class="center" src="{{answer}}">
+                        </div>
+                    {{else}}
+                        <p class="">{{answer}}</p>
+                    {{/if}}
                 </div>
                 <div class="rating-container">
                     <label class="input-label">Rating</label>

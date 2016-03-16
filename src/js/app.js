@@ -354,15 +354,17 @@ WorkerUI = (function () {
         data.skipAllowed = skipAnswerAllowed;
         data.required = false;
 
-        data.answerTypeMatches = function (type) {
-            var answerType = this.get("answerType");
-            // true if answerType begins with specified type.
-            return answerType.indexOf(type) === 0;
-        };
+        data.answerTypeMatches = answerTypeMatches;
 
         return new AnswerView({
             data: data
         });
+    }
+
+    function answerTypeMatches(type) {
+        var answerType = this.get("answerType");
+        // true if answerType begins with specified type.
+        return answerType.indexOf(type) === 0;
     }
 
 
@@ -377,6 +379,8 @@ WorkerUI = (function () {
                     if (toSubmit !== null && toSubmit.length > 0) {
                         multipleSubmit(routes.rating, toSubmit).done(function () {
                             ractive.fire("submit.rating", ractive.get(), toSubmit);
+                            //set skip ratings to allowed after one submit was successful if skipRatingIs allowed
+                            this.set("skipAllowed", skipRatingAllowed);
                             getNext()
                         });
                     }
@@ -436,6 +440,7 @@ WorkerUI = (function () {
             return toSubmit;
         }
     });
+
     function newRatingView(data) {
         // initialise data
         if (data.constraints === undefined || data.constraints.length === 0) {
@@ -457,6 +462,7 @@ WorkerUI = (function () {
         data.toSubmit.ratings = ratings;
 
         data.neededSubmitsCount = answersToRate.length;
+        data.answerTypeMatches = answerTypeMatches;
         return new RatingView({
             data: data
         });
