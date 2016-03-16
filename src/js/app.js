@@ -379,6 +379,8 @@ WorkerUI = (function () {
                     if (toSubmit !== null && toSubmit.length > 0) {
                         multipleSubmit(routes.rating, toSubmit).done(function () {
                             ractive.fire("submit.rating", ractive.get(), toSubmit);
+                            //set skip ratings to allowed after one submit was successful if skipRatingIs allowed
+                            this.set("skipAllowed", skipRatingAllowed);
                             getNext()
                         });
                     }
