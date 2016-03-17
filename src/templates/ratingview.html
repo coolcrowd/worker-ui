@@ -5,7 +5,7 @@
             <li class="rating" outro="fade" id="rating-{{i}}">
                 <div class="answer-container">
                     <label class="input-label">Answer to rate</label>
-                    {{#if answerTypeMatches:images }}
+                    {{#if answerTypeMatches("image") }}
                         <div id="rating-image">
                             <img class="center" src="{{answer}}">
                         </div>
@@ -58,7 +58,7 @@
 
     <div class="actions actions-right actions-bottom">
 
-        <span>You need to select a rating for all answers!</span>
+        <span>You need to select a rating for at least one answer!</span>
         <button class="action action-constructive" on-click="submit">Hand in!</button>
         {{#if skipAllowed}}
         <button class="action action-constructive" on-click="skip">Skip</button>
