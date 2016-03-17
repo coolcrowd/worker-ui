@@ -61,7 +61,7 @@
 <script>
     var working = false;
 
-    $.getJSON({url: "${WS_URL}/experiments/${PLATFORM}", success: function(result){
+    $.getJSON({url: "${WS_URL}experiments/${PLATFORM}", success: function(result){
         populateList(result.experiments);
     }});
 
