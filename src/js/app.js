@@ -380,7 +380,7 @@ WorkerUI = (function () {
                         multipleSubmit(routes.rating, toSubmit).done(function () {
                             ractive.fire("submit.rating", ractive.get(), toSubmit);
                             //set skip ratings to allowed after one submit was successful if skipRatingIs allowed
-                            this.set("skipAllowed", skipRatingAllowed);
+                            skipRatingAllowed = true;
                             getNext()
                         });
                     }
@@ -409,23 +409,13 @@ WorkerUI = (function () {
             var feedbacks = this.get("toSubmit.feedbacks");
             var constraints = this.get("toSubmit.constraints");
             var ratedAnswer;
-            var scrolled = false;
             for (var i = 0; i < answersToRate.length; i++) {
                 if (ratings === undefined || ratings[i] === undefined) {
-                    // TODO handle case when not all ratings are set
                     // mark missing rating
                     ractive.animate("answersToRate[" + i + "].required", true, {
                         easing: "easeIn",
                         duration: 1000
                     });
-                    if (!scrolled) {
-                        $('html,body').animate({
-                                scrollTop: $("#rating-" + i).offset().top
-                            },
-                            'slow'
-                        );
-                        scrolled = true;
-                    }
                 } else {
                     ratedAnswer = {};
                     ratedAnswer.rating = parseInt(ratings[i]);
@@ -487,10 +477,6 @@ WorkerUI = (function () {
     var ractive, currentViewType;
 
     function viewNext(next) {
-        // TODO evaluate if view should always be reloaded
-        if (next["type"] === currentViewType) {
-            ractive.merge("", next);
-        } else {
             ractive.teardown();
             switch (next["type"]) {
                 case "EMAIL":
@@ -518,10 +504,9 @@ WorkerUI = (function () {
                     console.log("Unknown type: " + next["type"])
             }
             currentViewType = next["type"];
-        }
     }
 
-// TODO make isolated
+
     function viewPreview() {
         $.getJSON(routes.preview + properties.experiment, function (preview) {
             preview.isPreview = true;
