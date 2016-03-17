@@ -16,7 +16,7 @@
     {{/if}}
 
     <div class="input">
-        {{#if answerTypeMatches:images }}
+        {{#if answerTypeMatches("image") }}
             <label class="input-label">Image</label>
             <input type="text" name="answer" value="{{toSubmit.answer}}" placeholder="Enter your image url here!">
             <div id="answer-image">
