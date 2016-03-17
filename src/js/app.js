@@ -362,7 +362,7 @@ WorkerUI = (function () {
     }
 
     function answerTypeMatches(type) {
-        var answerType = this.get("answerType");
+        var answerType = ractive.get("answerType");
         // true if answerType begins with specified type.
         return answerType.indexOf(type) === 0;
     }
@@ -443,13 +443,16 @@ WorkerUI = (function () {
         // initialize answersToRate[i].required
         var answersToRate = data.answersToRate;
         var ratings = [];
+        var feedbacks = [];
         for (var i = 0; i < answersToRate.length; i++) {
             answersToRate[i].required = false;
             ratings.push(null);
+            feedbacks.push("");
         }
         data.answersToRate = answersToRate;
         data.toSubmit = {};
         data.toSubmit.ratings = ratings;
+        data.toSubmit.feedbacks = feedbacks;
 
         data.neededSubmitsCount = answersToRate.length;
         data.answerTypeMatches = answerTypeMatches;
