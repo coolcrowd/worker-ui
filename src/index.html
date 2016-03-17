@@ -82,7 +82,7 @@
 <script>
     var working = false;
 
-    $.getJSON({url: "http://localhost:3333/experiments/dummydummy", success: function(result){//"${WS_URL}experiments/${PLATFORM}", success: function(result){
+    $.getJSON({"${WS_URL}experiments/${PLATFORM}", success: function(result){
         populateList(result.experiments);
     }});
 
@@ -101,8 +101,8 @@
         $("#sidebar").hide();
 
         var properties = {
-            workerServiceURL: "http://localhost:3333/",//"${WS_URL}",
-            platform: "dummydummy",//"${PLATFORM}",
+            workerServiceURL: "${WS_URL}",
+            platform: "${PLATFORM}",
             experiment: experimentID,
 
             // optional
