@@ -423,7 +423,11 @@ WorkerUI = (function () {
                     ratedAnswer.experiment = experiment;
                     ratedAnswer.answerId = answersToRate[i].answerId;
                     ratedAnswer.feedback = feedbacks[i];
-                    ratedAnswer.constraints = constraints[i];
+                    if (constraints == null) {
+                        ratedAnswer.constraints = [];
+                    } else {
+                        ratedAnswer.constraints = constraints[i];
+                    }
                     toSubmit.push(ratedAnswer);
                 }
             }
