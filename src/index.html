@@ -26,6 +26,7 @@
             width: 300px;
             background: #eee;
             box-shadow: -5px -2px 0 0 rgba(0, 0, 0, .1) inset;
+            z-index: 10;
         }
 
         #experimentList {
@@ -82,9 +83,31 @@
 <script>
     var working = false;
 
-    $.getJSON({"${WS_URL}experiments/${PLATFORM}", success: function(result){
+    var url = "http://localhost:3333/";//"${WS_URL}";
+    var platform = "dummydummy";//"${PLATFORM}";
+    var experimentsUrl = url+"experiments/"+platform;
+
+    $.getJSON({url: experimentsUrl, success: function(result){
         populateList(result.experiments);
-    }});
+    }})
+    .error(function() { alert("Unable to fetch experiment from: "+experimentsUrl); });
+
+    var queryExperiment = getQueryString("experiment");
+
+    if (queryExperiment != null) {
+        init(queryExperiment);
+    }
+
+    function getQueryString(name) {
+        var url = window.location.href;
+        url = url.toLowerCase(); // This is just to avoid case sensitiveness
+        name = name.replace(/[\[\]]/g, "\\$&").toLowerCase();// This is just to avoid case sensitiveness for query parameter name
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    };
 
     function populateList(experiments) {
         $("#experimentList").empty();
@@ -95,14 +118,15 @@
             $("#experimentList").append('<li><a href="javascript://" onclick="init('+experiment.id+')">'+experiment.name+'</a></li>');
         }
     }
+
     // initialize with properties
     function init(experimentID) {
         working = true;
         $("#sidebar").hide();
 
         var properties = {
-            workerServiceURL: "${WS_URL}",
-            platform: "${PLATFORM}",
+            workerServiceURL: url,//"${WS_URL}",
+            platform: platform,//"${PLATFORM}",
             experiment: experimentID,
 
             // optional
