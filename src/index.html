@@ -83,8 +83,8 @@
 <script>
     var working = false;
 
-    var url = "http://localhost:3333/";//"${WS_URL}";
-    var platform = "dummydummy";//"${PLATFORM}";
+    var url = "${WS_URL}";
+    var platform = "${PLATFORM}";
     var experimentsUrl = url+"experiments/"+platform;
 
     $.getJSON({url: experimentsUrl, success: function(result){
@@ -98,6 +98,7 @@
         init(queryExperiment);
     }
 
+    //from: http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
     function getQueryString(name) {
         var url = window.location.href;
         url = url.toLowerCase(); // This is just to avoid case sensitiveness
