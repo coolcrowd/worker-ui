@@ -2,11 +2,11 @@
     <h1>Calibrations</h1>
     <p class="info">Just a few more questions before you start:</p>
     {{#each calibrations:i}}
-    <div id="calibration-{{i}}" class='{{ calibrations[i].required ? "required" : ""}}'>
-        <span>{{question}}</span>
-        <div>
+    <div id="calibration-{{i}}" class='calibration {{ calibrations[i].required ? "required" : ""}}'>
+        <span class='calibration-question'>{{question}}</span>
+        <div class='calibration-answers'>
             {{#each answerOptions:j}}
-            <label>
+            <label class='calibration-answer'>
                 <input type="radio" name="{{~/toSubmit.answerOptions[i]}}" id="{{calibrations[i].id}}-calibrationId-{{i}}-{{j}}" value={{id}}>
                 {{option}}
             </label>
