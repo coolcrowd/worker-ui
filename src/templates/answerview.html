@@ -18,13 +18,15 @@
     <div class="input">
         {{#if answerTypeMatches("image") }}
             <label class="input-label">Image</label>
-            <input type="text" name="answer" value="{{toSubmit.answer}}" placeholder="Enter your image url here!">
+            <input type="text" name="answer" value="{{toSubmit.answer}}" placeholder="Enter your image url here!"
+                   {{ isPreview ? "disabled" : ""}}>
             <div id="answer-image">
                 <img class="center" src="{{toSubmit.answer}}">
             </div>
         {{else}}
             <label class="input-label">Answer</label>
-            <textarea name="answer" value="{{toSubmit.answer}}" placeholder="Enter your answer here!"></textarea>
+            <textarea name="answer" value="{{toSubmit.answer}}" placeholder="Enter your answer here!"
+                      {{ isPreview ? "disabled" : ""}}></textarea>
         {{/if}}
 
         {{#if required}}

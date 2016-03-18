@@ -2,6 +2,7 @@
   "type": "RATING",
   "title": "Come up with a joke!",
   "description": "Come up with a joke about the following situation....",
+  "answerType": "image/*",
   "answersToRate": [
     {
       "id": 12,
@@ -28,7 +29,6 @@
       "id": 4,
       "name": "The tweet must not contain bad news. And a long text, furthermore the answer should be easy to understand."
     }
-
   ],
   "ratingOptions": [
     {

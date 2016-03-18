@@ -1,14 +1,16 @@
 <h1>{{title}}</h1>
 <p class="info">{{{description}}}</p>
 
-{{# pictures[0]}}
+{{#if pictures[0]}}
 <div class="image-container">
     {{#each pictures}}
     <div>
         <img class="center" src="{{url}}">
-        <label>License URL</label>
-        <a href="{{urlLicense}}">{{urlLicense}}</a>
+        {{#if .urlLicense}}
+            <label>License URL</label>
+            <a href="{{urlLicense}}">{{urlLicense}}</a>
+        {{/if}}
     </div>
     {{/each}}
 </div>
-{{/pictures}}
+{{/if}}
