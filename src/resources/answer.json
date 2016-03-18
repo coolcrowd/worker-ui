@@ -6,8 +6,7 @@
   "answerType": "image/*",
   "pictures": [
     {
-      "url": "http://learn.ractivejs.org/gifs/problem.gif",
-      "urlLicense": "http://learn.ractivejs.org/extending-ractive/2/"
+      "url": "http://learn.ractivejs.org/gifs/problem.gif"
     },
     {
       "url": "http://33.media.tumblr.com/993618ac8e6fe213212696eb1f06883d/tumblr_inline_o0rkrhF2O31raprkq_500.gif",
