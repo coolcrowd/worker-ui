@@ -469,48 +469,63 @@ WorkerUI = (function () {
         template: require("../templates/finishedview.html"),
 
         oninit: function () {
-            var nono = ["no more", "still no more", "really not any more"];
-            var i = 0;
-            this.on("next", function () {
-                this.set("nono", nono[i++ % 3]);
+            this.finishCountDown(5);
+            this.on("finish", function () {
+                this.fire("finished");
             });
 
-            this.fire("finished");
+        },
+
+        //time in seconds
+        finishCountDown: function( time ) {
+            this.set("countDown", time);
+
+            window.setTimeout(countDownTimer, 1000);
+            function countDownTimer() {
+                var countDown = ractive.get("countDown");
+                if (countDown === 0) {
+                    ractive.fire("finish");
+                } else {
+                    ractive.subtract("countDown");
+                    window.setTimeout(countDownTimer, 1000);
+                }
+            }
         }
     });
+
 
 //---------------- View building ------------------------
 
     var ractive, currentViewType;
 
     function viewNext(next) {
-            ractive.teardown();
-            switch (next["type"]) {
-                case "EMAIL":
-                    ractive = new EmailView({
-                        data: next
-                    });
-                    break;
-                case "CALIBRATION":
-                    ractive = new CalibrationView({
-                        data: next
-                    });
-                    break;
-                case "ANSWER":
-                    ractive = newAnswerView(next);
-                    break;
-                case "RATING":
-                    ractive = newRatingView(next);
-                    break;
-                case "FINISHED":
-                    ractive = new FinishedView({
-                        data: next
-                    });
-                    break;
-                default:
-                    console.log("Unknown type: " + next["type"])
-            }
-            currentViewType = next["type"];
+        ractive.teardown();
+        switch (next["type"]) {
+            case "EMAIL":
+                ractive = new EmailView({
+                    data: next
+                });
+                break;
+            case "CALIBRATION":
+                ractive = new CalibrationView({
+                    data: next
+                });
+                break;
+            case "ANSWER":
+                ractive = newAnswerView(next);
+                break;
+            case "RATING":
+                ractive = newRatingView(next);
+                break;
+            case "FINISHED":
+                ractive = new FinishedView({
+                    data: next
+                });
+                break;
+            default:
+                console.log("Unknown type: " + next["type"])
+        }
+        currentViewType = next["type"];
     }
 
 
