@@ -302,6 +302,23 @@ WorkerUI = (function () {
         }
     });
 
+    function answerTypeMatches(type) {
+        var answerType = this.get("answerType");
+        // true if answerType begins with specified type.
+        return answerType.indexOf(type) === 0;
+    }
+
+    function newAnswerView(data) {
+        data.skipAllowed = skipAnswerAllowed;
+        data.required = false;
+
+        data.answerTypeMatches = answerTypeMatches;
+
+        return new AnswerView({
+            data: data
+        });
+    }
+
     var AnswerView = DefaultView.extend({
         template: require("../templates/answerview.html"),
 
@@ -350,23 +367,36 @@ WorkerUI = (function () {
         }
     });
 
-    function newAnswerView(data) {
-        data.skipAllowed = skipAnswerAllowed;
-        data.required = false;
 
+    function newRatingView(data) {
+        // initialise data
+        if (data.constraints === undefined || data.constraints.length === 0) {
+            data.constraints = [{name: undefined, id: undefined}];
+        }
+
+        // if answers were skipped don't allow skip ratings
+        data.skipAllowed = (!answerSkipped && skipRatingAllowed);
+
+        // initialize answersToRate[i].required
+        var answersToRate = data.answersToRate;
+        var ratings = [];
+        var feedbacks = [];
+        for (var i = 0; i < answersToRate.length; i++) {
+            answersToRate[i].required = false;
+            ratings.push(null);
+            feedbacks.push("");
+        }
+        data.answersToRate = answersToRate;
+        data.toSubmit = {};
+        data.toSubmit.ratings = ratings;
+        data.toSubmit.feedbacks = feedbacks;
+
+        data.neededSubmitsCount = answersToRate.length;
         data.answerTypeMatches = answerTypeMatches;
-
-        return new AnswerView({
+        return new RatingView({
             data: data
         });
     }
-
-    function answerTypeMatches(type) {
-        var answerType = ractive.get("answerType");
-        // true if answerType begins with specified type.
-        return answerType.indexOf(type) === 0;
-    }
-
 
     var RatingView = DefaultView.extend({
         template: require("../templates/ratingview.html"),
@@ -434,36 +464,6 @@ WorkerUI = (function () {
             return toSubmit;
         }
     });
-
-    function newRatingView(data) {
-        // initialise data
-        if (data.constraints === undefined || data.constraints.length === 0) {
-            data.constraints = [{name: undefined, id: undefined}];
-        }
-
-        // if answers were skipped don't allow skip ratings
-        data.skipAllowed = (!answerSkipped && skipRatingAllowed);
-
-        // initialize answersToRate[i].required
-        var answersToRate = data.answersToRate;
-        var ratings = [];
-        var feedbacks = [];
-        for (var i = 0; i < answersToRate.length; i++) {
-            answersToRate[i].required = false;
-            ratings.push(null);
-            feedbacks.push("");
-        }
-        data.answersToRate = answersToRate;
-        data.toSubmit = {};
-        data.toSubmit.ratings = ratings;
-        data.toSubmit.feedbacks = feedbacks;
-
-        data.neededSubmitsCount = answersToRate.length;
-        data.answerTypeMatches = answerTypeMatches;
-        return new RatingView({
-            data: data
-        });
-    }
 
     var FinishedView = DefaultView.extend({
         template: require("../templates/finishedview.html"),
