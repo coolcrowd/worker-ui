@@ -1,0 +1,9 @@
+<div class="content" id="experiment">
+    <ul class="experiment-list">
+        {{#each experiments:i}}
+        <li>
+            <a href="" on-click="loadExperiment( .id )">{{description}}</a>
+        </li>
+        {{/each}}
+    </ul>
+</div>

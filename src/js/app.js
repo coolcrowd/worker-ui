@@ -555,6 +555,27 @@ WorkerUI = (function () {
         }
     });
 
+    var ExperimentsView = DefaultView.extend({
+        template: require("../templates/experimentsview.html"),
+
+        data: {
+            experiments: [
+                {
+                    id: 4,
+                    description: "Test"
+                },
+                {
+                    id: 5,
+                    description: "Testeriono"
+                }
+            ],
+            loadExperiment: function(id) {
+                properties.experiment = id;
+                getNext();
+            }
+        }
+    });
+
 
 //---------------- View building ------------------------
 
@@ -588,6 +609,9 @@ WorkerUI = (function () {
                     data: next
                 });
                 break;
+            case "EXPERIMENTS":
+                ractive = new ExperimentsView();
+                break;
             default:
                 console.log("Unknown type: " + next["type"])
         }
@@ -602,7 +626,18 @@ WorkerUI = (function () {
         $.getJSON(routes.preview + properties.experiment, function (preview) {
             preview.isPreview = true;
             viewNext(preview);
-        })
+        });
+    }
+
+    /**
+     * Display the experiments list
+     */
+    function viewExperiments() {
+        identifyWorker().then(
+            $.getJSON(routes.experiments + properties.platform, function (experiments) {
+                viewNext({type: "EXPERIMENTS"});
+            })
+        );
     }
 
 
@@ -660,6 +695,7 @@ WorkerUI = (function () {
     var properties = {
         preview: false,
         test: false,
+        experimentsListEnabled: false,
         osParams: {}
     };
     var jwt = NO_AUTH;
@@ -674,7 +710,8 @@ WorkerUI = (function () {
         calibration: "calibrations",
         answer: "answers",
         rating: "ratings",
-        preview: "preview/"
+        preview: "preview/",
+        experiments: "experiments/"
     };
 
     /**
@@ -782,8 +819,13 @@ WorkerUI = (function () {
             jwt = loadAuthorization();
             if (properties.FORCE_VIEW) {
                 properties.workerServiceURL = "resources/";
+            } else if (properties.experimentsListEnabled) {
+
+            } else if (properties.preview) {
+                viewPreview();
+            } else {
+                getNext();
             }
-            properties.preview === true ? viewPreview() : getNext();
 
         },
 
