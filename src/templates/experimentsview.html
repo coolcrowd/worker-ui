@@ -1,9 +1,23 @@
 <div class="content" id="experiment">
-    <ul class="experiment-list">
-        {{#each experiments:i}}
-        <li>
-            <a href='{{.link ? .link : "#"}}' on-click="loadExperiment( .id, .link)">{{name}}</a>
-        </li>
-        {{/each}}
-    </ul>
+    <div>
+        <h1>
+            Available Experiments
+        </h1>
+        <ul class="experiment-list">
+            {{#each experiments:i}}
+            <li>
+                <a href='{{.link ? .link : "#"}}' on-click="loadExperiment( .id, .link)">{{name}}</a>
+                <div class="experiment-list-actions">
+                    <button type="button" class="action">More</button>
+                </div>
+            </li>
+            {{/each}}
+
+            {{#if !experiments}}
+            <li class="experiment-list-empty">
+                <i class="fa fa-3x fa-flask"></i>
+            </li>
+            {{/if}}
+        </ul>
+    </div>
 </div>

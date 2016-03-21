@@ -572,7 +572,7 @@ WorkerUI = (function () {
             this.finishCountDown(5);
             this.on("finish", function () {
                 this.fire("finished");
-                if (experimentsViewEnabled) {
+                if (properties.experimentsViewEnabled) {
                     getExperiments();
                 }
             });
@@ -864,7 +864,7 @@ WorkerUI = (function () {
 
             if (properties.preview) {
                 getPreview();
-            } else if (properties.experimentsViewEnabled) {
+            } else if (properties.experiment === null && properties.experimentsViewEnabled) {
                 getExperiments();
             } else {
                 getNext();
