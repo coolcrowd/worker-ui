@@ -107,10 +107,8 @@ WorkerUI = (function () {
             });
 
             ajax.done(function (experiments) {
-                viewNext({
-                    type: "EXPERIMENTS",
-                    experiments: experiments
-                });
+                experiments.type = "EXPERIMENTS";
+                viewNext(experiments);
             });
 
             return ajax;
@@ -599,18 +597,45 @@ WorkerUI = (function () {
     });
 
     function newExperimentsView(data) {
-        data.loadExperiment = function (id) {
-            properties.experiment = id;
-            getNext();
-        };
+        var experimentIds = [];
+        for (var i = 0; i < data.experiments.length; i++) {
+            experimentIds.push(data.experiments[i].id);
+        }
 
+        var experimentLinks = linkExperiments( experimentIds );
+        if (experimentLinks !== null && experimentLinks !== undefined && experimentIds.length === data.experiments.length) {
+            for (var i = 0; i < data.experiments.length; i++) {
+                data.experiments[i].link = experimentLinks[i];
+            }
+        }
 
-        return DefaultView.extend({
-            template: require("../templates/experimentsview.html"),
-
+        return new ExperimentsView({
             data: data
         });
     }
+
+    var ExperimentsView = DefaultView.extend({
+        template: require("../templates/experimentsview.html"),
+
+
+        oninit: function () {
+            console.log(JSON.stringify(this.get(), null, 4));
+        },
+
+        loadExperiment: function (id, link) {
+            if (link) {
+                return true;
+            } else {
+                properties.experiment = id;
+                getNext();
+                return false;
+            }
+        }
+    });
+
+    var linkExperiments = function () {
+        return null;
+    };
 
 
 //---------------- View building ------------------------
@@ -892,12 +917,22 @@ WorkerUI = (function () {
             hooks.rating = call;
         },
 
+
         /**
          * This function is called when the current task is finished
          * @param call the function to call.
          */
         onFinished: function (call) {
             hooks.finished = call;
+        },
+
+        /**
+         * This function is called when the ExperimentsView is initialized.
+         * Your method will get an array containing all experiment ids and can return an array with direct links to the experiments.
+         * If the array is empty/undefined/null the new experiment will be loaded in the current context.
+         */
+        onlinkExperiments: function (call) {
+                linkExperiments = call;
         },
 
         /**
@@ -928,6 +963,7 @@ WorkerUI = (function () {
                 return jwt;
             }
         },
+
 
         generateAuthHash: require("./generateAuthHash").generateAuthHash
     }

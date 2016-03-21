@@ -1,13 +1,12 @@
 {
-  "type": "EXPERIMENT",
   "experiments": [
     {
       "id": 4,
-      "description": "Test"
+      "name": "Test"
     },
     {
       "id": 5,
-      "description": "Testeriono"
+      "name": "Testeriono"
     }
   ]
 }
