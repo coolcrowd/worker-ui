@@ -6,10 +6,23 @@
         <ul class="experiment-list">
             {{#each experiments:i}}
             <li>
-                <a href='{{.link ? .link : "#"}}' on-click="loadExperiment( .id, .link)">{{name}}</a>
+                <a href='{{.link ? .link : "#"}}' on-click="loadExperiment( .id, .link)">{{title}}</a>
                 <div class="experiment-list-actions">
-                    <button type="button" class="action">More</button>
+                    <button type="button" on-click='toggleExpanded(i)' class="action">
+                        {{#if .expanded}}
+                            <i class='fa fa-chevron-up icon'></i>
+                            <span>Less</span>
+                        {{else}}
+                            <i class='fa fa-chevron-down icon'></i>
+                            <span>More</span>
+                        {{/if}}
+                    </button>
                 </div>
+                {{#if .expanded}}
+                <p class="info experiment-list-description">
+                    {{description}}
+                </p>
+                {{/if}}
             </li>
             {{/each}}
 

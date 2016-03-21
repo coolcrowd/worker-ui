@@ -1,15 +1,16 @@
 .experiment-list {
   padding: 0;
   margin: 0;
-  display: table;
+  display: block;
   width: 100%;
   border-collapse: collapse;
+  list-style-type: none;
 }
 
 .experiment-list > li {
   line-height: 50px;
   padding: 0 15px;
-  display: table-row;
+  display: list-item;
   width: 100%;
   box-sizing: border-box;
   border-bottom: 1px solid #ddd; /* solid color because of border-collapse */
@@ -21,10 +22,6 @@
 
 .experiment-list > li:first-child {
   border-top: 1px solid #ddd; /* solid color because of border-collapse */
-}
-
-.experiment-list > li:not(.experiment-list-empty) > * {
-  display: table-cell;
 }
 
 .experiment-list-large > li:not(.experiment-list-empty) > * {
@@ -46,12 +43,12 @@
 
 .experiment-list-actions {
   text-align: right;
+  float: right;
 }
 
 .experiment-list-actions > .action {
   color: #08e !important;
   background: transparent !important;
-  border-bottom: 0;
 }
 
 .experiment-list-actions > .action-constructive {
