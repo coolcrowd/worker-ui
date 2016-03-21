@@ -783,10 +783,16 @@ WorkerUI = (function () {
             $(document).off("ajaxError");
             // set global ajax error handler
             $(document).ajaxError(function (event, request, settings, thrownError) {
-                if (request.status === 0) {
-                    alert("Connection error: Could not reach server at " + settings.url + ".");
-                } else {
-                    alert(request.statusText + ":\n" + JSON.stringify(request.responseJSON, null, 4));
+                switch (request.status) {
+                    case 0:
+                        alert("Connection error: Could not reach server at " + settings.url + ".");
+                        break;
+                    case 500:
+                        alert("Sorry, an internal server error occurred.");
+                        console.log(JSON.stringify(request.responseJSON, null, 4));
+                        break;
+                    default:
+                        alert(request.statusText + ":\n" + JSON.stringify(request.responseJSON, null, 4));
                 }
             });
             ractive = new DefaultView();
