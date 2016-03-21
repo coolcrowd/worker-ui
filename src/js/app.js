@@ -599,7 +599,11 @@ WorkerUI = (function () {
     function newExperimentsView(data) {
         var experimentIds = [];
         for (var i = 0; i < data.experiments.length; i++) {
+            // create array with experiment ids
             experimentIds.push(data.experiments[i].id);
+
+            // initialize dropdown
+            data.experiments[i].expanded = false;
         }
 
         var experimentLinks = linkExperiments( experimentIds );
@@ -608,6 +612,8 @@ WorkerUI = (function () {
                 data.experiments[i].link = experimentLinks[i];
             }
         }
+
+        data.foo = true;
 
         return new ExperimentsView({
             data: data
@@ -630,8 +636,13 @@ WorkerUI = (function () {
                 getNext();
                 return false;
             }
+        },
+
+        toggleExpanded: function(i) {
+            this.toggle("experiments[" + i + "].expanded");
         }
-    });
+
+});
 
     var linkExperiments = function () {
         return null;

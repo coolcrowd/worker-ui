@@ -9,7 +9,7 @@
 .experiment-list > li {
   line-height: 50px;
   padding: 0 15px;
-  display: table-row;
+  display: table-row-group;
   width: 100%;
   box-sizing: border-box;
   border-bottom: 1px solid #ddd; /* solid color because of border-collapse */
@@ -25,6 +25,10 @@
 
 .experiment-list > li:not(.experiment-list-empty) > * {
   display: table-cell;
+}
+
+.experiment-list > li:not(.experiment-list-empty) > .experiment-list-description {
+  display: table-row;
 }
 
 .experiment-list-large > li:not(.experiment-list-empty) > * {
@@ -51,7 +55,6 @@
 .experiment-list-actions > .action {
   color: #08e !important;
   background: transparent !important;
-  border-bottom: 0;
 }
 
 .experiment-list-actions > .action-constructive {
