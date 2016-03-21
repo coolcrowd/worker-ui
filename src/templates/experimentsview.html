@@ -1,5 +1,13 @@
 <div class="content" id="experiment">
     <div>
+        {{#if showLogoutButton}}
+        <div class="actions">
+            <button type="button" on-click="logout()" class="action action-destructive">
+                <i class="fa fa-sign-out icon"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+        {{/if}}
         <h1>
             Available Experiments
         </h1>
