@@ -78,6 +78,45 @@ WorkerUI = (function () {
     }
 
     /**
+     * Display the preview of the task
+     */
+    function getPreview() {
+        $.getJSON(routes.preview + properties.experiment, function (preview) {
+            preview.isPreview = true;
+            viewNext(preview);
+        });
+    }
+
+    /**
+     * Display the experiments list
+     */
+    function getExperiments() {
+        var experimentsUrl;
+        if (properties.FORCE_VIEW) {
+            experimentsUrl = properties.workerServiceURL + "experiments.json";
+        } else {
+            experimentsUrl = routes.experiments + properties.platform;
+        }
+
+        identifyWorker().then(function () {
+            var ajax = $.ajax({
+                dataType: "json",
+                url: experimentsUrl,
+                headers: getAuthenticationHeader()
+            });
+
+            ajax.done(function (experiments) {
+                viewNext({
+                    type: "EXPERIMENTS",
+                    experiments: experiments
+                });
+            });
+
+            return ajax;
+        });
+    }
+
+    /**
      * Posts data to the worker-service.
      * Tries to identify a worker before.
      * @param route the url to post to
@@ -534,12 +573,15 @@ WorkerUI = (function () {
             this.finishCountDown(5);
             this.on("finish", function () {
                 this.fire("finished");
+                if (experimentsViewEnabled) {
+                    getExperiments();
+                }
             });
 
         },
 
         //time in seconds
-        finishCountDown: function( time ) {
+        finishCountDown: function (time) {
             this.set("countDown", time);
 
             window.setTimeout(countDownTimer, 1000);
@@ -555,26 +597,19 @@ WorkerUI = (function () {
         }
     });
 
-    var ExperimentsView = DefaultView.extend({
-        template: require("../templates/experimentsview.html"),
+    function newExperimentsView(data) {
+        data.loadExperiment = function (id) {
+            properties.experiment = id;
+            getNext();
+        };
 
-        data: {
-            experiments: [
-                {
-                    id: 4,
-                    description: "Test"
-                },
-                {
-                    id: 5,
-                    description: "Testeriono"
-                }
-            ],
-            loadExperiment: function(id) {
-                properties.experiment = id;
-                getNext();
-            }
-        }
-    });
+
+        return DefaultView.extend({
+            template: require("../templates/experimentsview.html"),
+
+            data: data
+        });
+    }
 
 
 //---------------- View building ------------------------
@@ -610,34 +645,12 @@ WorkerUI = (function () {
                 });
                 break;
             case "EXPERIMENTS":
-                ractive = new ExperimentsView();
+                ractive = newExperimentsView(next);
                 break;
             default:
                 console.log("Unknown type: " + next["type"])
         }
         currentViewType = next["type"];
-    }
-
-
-    /**
-     * Display the preview of the task
-     */
-    function viewPreview() {
-        $.getJSON(routes.preview + properties.experiment, function (preview) {
-            preview.isPreview = true;
-            viewNext(preview);
-        });
-    }
-
-    /**
-     * Display the experiments list
-     */
-    function viewExperiments() {
-        identifyWorker().then(
-            $.getJSON(routes.experiments + properties.platform, function (experiments) {
-                viewNext({type: "EXPERIMENTS"});
-            })
-        );
     }
 
 
@@ -695,7 +708,7 @@ WorkerUI = (function () {
     var properties = {
         preview: false,
         test: false,
-        experimentsListEnabled: false,
+        experimentsViewEnabled: false,
         osParams: {}
     };
     var jwt = NO_AUTH;
@@ -779,6 +792,8 @@ WorkerUI = (function () {
          *      experiment: 1,
          *      // optional
          *      preview: false,
+         *      // optional
+         *      experimentsViewEnabled: false,
          *      // this will force the answer view
          *      FORCE_VIEW: 3,
          *      // this will skip posts
@@ -819,10 +834,12 @@ WorkerUI = (function () {
             jwt = loadAuthorization();
             if (properties.FORCE_VIEW) {
                 properties.workerServiceURL = "resources/";
-            } else if (properties.experimentsListEnabled) {
+            }
 
-            } else if (properties.preview) {
-                viewPreview();
+            if (properties.preview) {
+                getPreview();
+            } else if (properties.experimentsViewEnabled) {
+                getExperiments();
             } else {
                 getNext();
             }
