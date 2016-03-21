@@ -101,7 +101,7 @@ WorkerUI = (function () {
                     dataType: "json",
                     url: nextUrl,
                     data: nextParams,
-                    headers: getAuthenticationHeader()
+                    headers: getAuthorizationHeader()
                 });
 
                 ajax.done(function (data, status) {
@@ -141,7 +141,7 @@ WorkerUI = (function () {
             var ajax = $.ajax({
                 dataType: "json",
                 url: experimentsUrl,
-                headers: getAuthenticationHeader()
+                headers: getAuthorizationHeader()
             });
 
             ajax.done(function (experiments) {
@@ -179,7 +179,7 @@ WorkerUI = (function () {
                     contentType: "application/json",
                     // function to print all posted data
                     data: jsonData,
-                    headers: getAuthenticationHeader()
+                    headers: getAuthorizationHeader()
                 });
 
                 ajax.done(function (response, status, xhr) {
@@ -299,11 +299,11 @@ WorkerUI = (function () {
     }
 
     /**
-     * Returns the authentication token header
+     * Returns the authorization token header
      *
      * @returns {{}}
      */
-    function getAuthenticationHeader() {
+    function getAuthorizationHeader() {
         var headers = {};
         if (jwt !== NO_AUTH) {
             headers.Authorization = "Bearer " + jwt;
@@ -324,6 +324,18 @@ WorkerUI = (function () {
             )
         } else {
             return $.Deferred().resolve(jwt).promise();
+        }
+    }
+
+    /**
+     * Get the current worker.
+     * @returns {*}
+     */
+    function getWorker() {
+        if (jwt === NO_AUTH) {
+            return loadAuthorization();
+        } else {
+            return jwt;
         }
     }
 
@@ -651,7 +663,7 @@ WorkerUI = (function () {
             }
         }
 
-        data.showLogoutButton = properties.experimentsViewLogoutButtonEnabled && ;
+        data.showLogoutButton = properties.experimentsViewLogoutButtonEnabled && getWorker() !== NO_AUTH;
 
         return new ExperimentsView({
             data: data
@@ -681,7 +693,7 @@ WorkerUI = (function () {
         },
 
         logout: function() {
-
+            this.set("showLogoutButton", false);
             clearAuthorization();
         }
 
@@ -980,17 +992,8 @@ WorkerUI = (function () {
         },
 
 
-        /**
-         * Get the current worker.
-         * @returns {*}
-         */
-        getWorker: function () {
-            if (jwt === NO_AUTH) {
-                return loadAuthorization();
-            } else {
-                return jwt;
-            }
-        },
+
+        getWorker: getWorker,
 
         generateAuthHash: require("./generateAuthHash").generateAuthHash
     }
