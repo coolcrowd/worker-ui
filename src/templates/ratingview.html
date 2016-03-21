@@ -19,7 +19,7 @@
                         {{#each ratingOptions:j}}
                         <label on-click="removeRequired:{{i}}">
                             <input type="radio" name="{{~/toSubmit.ratings[i]}}"
-                                   id="{{answersToRate[i].id}}-ratingId-{{i}}-{{j}}" value={{value}}>
+                                   id="rating-{{i}}-{{j}}" value={{value}}>
                             {{description}}
                         </label>
                         {{/each}}

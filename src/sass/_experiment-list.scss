@@ -1,0 +1,108 @@
+.experiment-list {
+  padding: 0;
+  margin: 0;
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.experiment-list > li {
+  line-height: 50px;
+  padding: 0 15px;
+  display: table-row;
+  width: 100%;
+  box-sizing: border-box;
+  border-bottom: 1px solid #ddd; /* solid color because of border-collapse */
+}
+
+.experiment-list-large > li {
+  display: block;
+}
+
+.experiment-list > li:first-child {
+  border-top: 1px solid #ddd; /* solid color because of border-collapse */
+}
+
+.experiment-list > li:not(.experiment-list-empty) > * {
+  display: table-cell;
+}
+
+.experiment-list-large > li:not(.experiment-list-empty) > * {
+  display: inline-block;
+  line-height: 18px;
+}
+
+.experiment-list a {
+  font-weight: bold;
+  text-decoration: none;
+  color: #111;
+}
+
+.experiment-list-large .experiment-list-actions {
+  float: right;
+  line-height: 50px !important;
+  transform: translateY(4px);
+}
+
+.experiment-list-actions {
+  text-align: right;
+}
+
+.experiment-list-actions > .action {
+  color: #08e !important;
+  background: transparent !important;
+  border-bottom: 0;
+}
+
+.experiment-list-actions > .action-constructive {
+  color: #00ac4d !important;
+}
+
+.experiment-list-actions > .action-destructive {
+  color: #ab3900 !important;
+}
+
+.experiment-list-empty {
+  font-style: italic;
+  text-align: center;
+  color: #888;
+  display: table-cell !important;
+  line-height: 24px !important;
+  padding: 30px 0 !important;
+}
+
+.experiment-list-empty .fa {
+  color: #ddd;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 600px) {
+  .experiment-list {
+    display: block;
+  }
+
+  .experiment-list > li {
+    display: block;
+    line-height: 40px;
+    padding: 10px 25px;
+    background: white;
+    margin: 0 -25px;
+    width: calc(100% + 50px);
+    border-color: #eee !important;
+  }
+
+  .experiment-list > li.experiment-list-empty {
+    display: block !important;
+  }
+
+  .experiment-list > li > a {
+    display: block !important;
+    font-size: 110%;
+  }
+
+  .experiment-list-actions {
+    display: block !important;
+    text-align: left;
+    margin: 0 -5px;
+  }
+}

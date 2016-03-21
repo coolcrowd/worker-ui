@@ -2,6 +2,12 @@ var Ractive = require("ractive");
 var $ = require("jquery");
 var Mime = require("./mimeType");
 
+/**
+ * The WorkerUI object can be used as a library to display all views for the worker-service
+ * You need to call init() with initialization properties and can display the views with load()
+ *
+ * @type {{init, load, onSubmitAny, onSubmitEmail, onSubmitCalibration, onSubmitAnswer, onSubmitRating, onFinished, beforeIdentifyWorker, clearWorker, getWorker, generateAuthHash}}
+ */
 WorkerUI = (function () {
     // disable debug mode when minified
     Ractive.DEBUG = /unminified/.test(function () {/*unminified*/
@@ -50,6 +56,7 @@ WorkerUI = (function () {
     var RATING = 3;
     var ANSWER = 4;
     var FINISHED = 5;
+    var EXPERIMENTS = 6;
 
     function loop(array) {
         var index = 0;
@@ -64,6 +71,11 @@ WorkerUI = (function () {
         }
     }
 
+    /**
+     * Fetches the next view from the worker-service and calls the method to display the next view
+     *
+     * @returns {*}
+     */
     function getNext() {
         var nextUrl;
         if (properties.FORCE_VIEW) {
@@ -103,6 +115,50 @@ WorkerUI = (function () {
         );
     }
 
+    /**
+     * Display the preview of the task
+     */
+    function getPreview() {
+        $.getJSON(routes.preview + properties.experiment, function (preview) {
+            preview.isPreview = true;
+            viewNext(preview);
+        });
+    }
+
+    /**
+     * Display the experiments list
+     */
+    function getExperiments() {
+        var experimentsUrl;
+        if (properties.FORCE_VIEW === EXPERIMENTS) {
+            experimentsUrl = properties.workerServiceURL + "experiments.json";
+        } else {
+            experimentsUrl = routes.experiments + properties.platform;
+        }
+
+        identifyWorker().then(function () {
+            var ajax = $.ajax({
+                dataType: "json",
+                url: experimentsUrl,
+                headers: getAuthenticationHeader()
+            });
+
+            ajax.done(function (experiments) {
+                experiments.type = "EXPERIMENTS";
+                viewNext(experiments);
+            });
+
+            return ajax;
+        });
+    }
+
+    /**
+     * Posts data to the worker-service.
+     * Tries to identify a worker before.
+     * @param route the url to post to
+     * @param data
+     * @returns {*}
+     */
     function postSubmit(route, data) {
         return identifyWorker().then(function () {
             // in case of email
@@ -139,7 +195,7 @@ WorkerUI = (function () {
 
 
     /**
-     * Sends the value of every key in data seperately
+     * Sends every data element in the array separately via postSubmit().
      * @param route the route of the endpoint
      * @param dataArray the data
      */
@@ -156,6 +212,12 @@ WorkerUI = (function () {
         return multipleAjax;
     }
 
+    /**
+     * Insert the object-service parameters into the data object
+     *
+     * @param data
+     * @returns {*}
+     */
     function insertOsParameters(data) {
         if (properties.osParams) {
             var paramArray = [];
@@ -175,9 +237,13 @@ WorkerUI = (function () {
         return data;
     }
 
-
 // ------------------ Worker Handling ---------------------
 
+    /**
+     * Extracts the authorization of a response from the worker-service
+     *
+     * @param data
+     */
     function extractAuthorization(data) {
         if (data.authorization !== undefined && data.authorization.length !== 0) {
             jwt = data.authorization;
@@ -186,6 +252,11 @@ WorkerUI = (function () {
         }
     }
 
+    /**
+     * Persists the authorization to the sessionStorage
+     *
+     * @param jwt the authorization
+     */
     function persistAuthorization(jwt) {
         if (typeof(Storage) !== "undefined") {
             // Code for sessionStorage/sessionStorage.
@@ -196,6 +267,10 @@ WorkerUI = (function () {
         }
     }
 
+    /**
+     * Loads the authorization from the sessionStorage
+     * @returns {string}
+     */
     function loadAuthorization() {
         if (typeof(Storage) !== "undefined") {
             // Code for sessionStorage/sessionStorage.
@@ -212,6 +287,9 @@ WorkerUI = (function () {
         return NO_AUTH;
     }
 
+    /**
+     * Clear the authorization in sessionStorage and set jwt to NO_AUTH
+     */
     function clearAuthorization() {
         if (typeof(Storage) !== "undefined") {
             sessionStorage.clear();
@@ -219,6 +297,11 @@ WorkerUI = (function () {
         jwt = NO_AUTH;
     }
 
+    /**
+     * Returns the authentication token header
+     *
+     * @returns {{}}
+     */
     function getAuthenticationHeader() {
         var headers = {};
         if (jwt !== NO_AUTH) {
@@ -227,6 +310,10 @@ WorkerUI = (function () {
         return headers;
     }
 
+    /**
+     * Tries to identify a worker if no worker is set
+     * @returns {*}
+     */
     function identifyWorker() {
         if (hooks.identifyWorker !== undefined && jwt === NO_AUTH) {
             return hooks.identifyWorker().then(function (params) {
@@ -339,12 +426,24 @@ WorkerUI = (function () {
         }
     });
 
+    /**
+     * Check if mimetype of answer matches given type
+     *
+     * @param type
+     * @returns {boolean}
+     */
     function answerTypeMatches(type) {
         var answerType = this.get("answerType");
         // true if answerType begins with specified type.
         return answerType.indexOf(type) === 0;
     }
 
+    /**
+     * Constructs a new AnswerView
+     *
+     * @param data the data to initialize the view with
+     * @returns {{value, writable, configurable}|{value}|*}
+     */
     function newAnswerView(data) {
         data.skipAllowed = skipAnswerAllowed;
         data.required = false;
@@ -369,11 +468,6 @@ WorkerUI = (function () {
                         this.set("required", true);
                         return;
                     }
-
-                    // not sure about that
-                    //if (data.answerType === "images") {
-                    //    Mime.checkIfImage(data.toSubmit.answer);
-                    //}
 
                     // make copy to use reservation again if post fails
                     var reservation = data.answerReservations.slice();
@@ -405,6 +499,12 @@ WorkerUI = (function () {
     });
 
 
+    /**
+     * Constructs a new RatingView
+     *
+     * @param data the data to initialize the view with
+     * @returns {{value, writable, configurable}|{value}|*}
+     */
     function newRatingView(data) {
         // initialise data
         if (data.constraints === undefined || data.constraints.length === 0) {
@@ -486,7 +586,7 @@ WorkerUI = (function () {
                 } else {
                     ratedAnswer = {};
                     ratedAnswer.rating = parseInt(ratings[i]);
-                    ratedAnswer.ratingId = answersToRate[i].id;
+                    ratedAnswer.reservation = answersToRate[i].reservation;
                     ratedAnswer.experiment = experiment;
                     ratedAnswer.answerId = answersToRate[i].answerId;
                     ratedAnswer.feedback = feedbacks[i];
@@ -509,12 +609,15 @@ WorkerUI = (function () {
             this.finishCountDown(5);
             this.on("finish", function () {
                 this.fire("finished");
+                if (properties.experimentsViewEnabled) {
+                    getExperiments();
+                }
             });
 
         },
 
         //time in seconds
-        finishCountDown: function( time ) {
+        finishCountDown: function (time) {
             this.set("countDown", time);
 
             window.setTimeout(countDownTimer, 1000);
@@ -530,11 +633,56 @@ WorkerUI = (function () {
         }
     });
 
+    function newExperimentsView(data) {
+        var experimentIds = [];
+        for (var i = 0; i < data.experiments.length; i++) {
+            experimentIds.push(data.experiments[i].id);
+        }
+
+        var experimentLinks = linkExperiments( experimentIds );
+        if (experimentLinks !== null && experimentLinks !== undefined && experimentIds.length === data.experiments.length) {
+            for (var i = 0; i < data.experiments.length; i++) {
+                data.experiments[i].link = experimentLinks[i];
+            }
+        }
+
+        return new ExperimentsView({
+            data: data
+        });
+    }
+
+    var ExperimentsView = DefaultView.extend({
+        template: require("../templates/experimentsview.html"),
+
+
+        oninit: function () {
+            console.log(JSON.stringify(this.get(), null, 4));
+        },
+
+        loadExperiment: function (id, link) {
+            if (link) {
+                return true;
+            } else {
+                properties.experiment = id;
+                getNext();
+                return false;
+            }
+        }
+    });
+
+    var linkExperiments = function () {
+        return null;
+    };
+
 
 //---------------- View building ------------------------
 
     var ractive, currentViewType;
 
+    /**
+     * Loads the next view from a response of the <i>next</i> request
+     * @param next the response from the <i>next</i> request
+     */
     function viewNext(next) {
         ractive.teardown();
         switch (next["type"]) {
@@ -559,18 +707,13 @@ WorkerUI = (function () {
                     data: next
                 });
                 break;
+            case "EXPERIMENTS":
+                ractive = newExperimentsView(next);
+                break;
             default:
                 console.log("Unknown type: " + next["type"])
         }
         currentViewType = next["type"];
-    }
-
-
-    function viewPreview() {
-        $.getJSON(routes.preview + properties.experiment, function (preview) {
-            preview.isPreview = true;
-            viewNext(preview);
-        })
     }
 
 
@@ -598,6 +741,10 @@ WorkerUI = (function () {
 
     var hooks = {};
 
+    /**
+     * Registers the hooks for the api callbacks
+     * @param ractive
+     */
     function registerHooks(ractive) {
         // how can this be done cleaner?
         if (hooks.any !== undefined) {
@@ -620,6 +767,9 @@ WorkerUI = (function () {
         }
     }
 
+    /**
+     * Makes the routes for the workerServiceURL by adding the base routes
+     */
     function makeRoutes() {
         // ensure trailing slash
         if (properties.workerServiceURL.charAt(properties.workerServiceURL.length - 1) !== "/") {
@@ -633,6 +783,10 @@ WorkerUI = (function () {
         }
     }
 
+    /**
+     * Initialize the properties and attach them to the global properties variable
+     * @param props
+     */
     function initProperties(props) {
         if (props !== undefined) {
             for (var key in props) {
@@ -643,6 +797,9 @@ WorkerUI = (function () {
         }
     }
 
+    /**
+     * Loads the styles for the ui by attaching them to the document header.
+     */
     function loadStyles() {
         var $worker_ui = $('#worker_ui');
         if ($worker_ui.length > 0) {
@@ -667,9 +824,29 @@ WorkerUI = (function () {
 
     return {
         /**
-         * Reserved words for osParams:
-         * authorization, answer, rating
-         * @param props
+         * Initializes the whole library.
+         * Possible:
+         * {
+         *      workerServiceURL: "${WS_URL}",
+         *      platform: "dummydummy",
+         *      experiment: 1,
+         *      // optional
+         *      preview: false,
+         *      // optional
+         *      experimentsViewEnabled: false,
+         *      // this will force the answer view
+         *      FORCE_VIEW: 3,
+         *      // this will skip posts
+         *      NO_POST: true,
+         *      // these params will be passed to the crowdplatform implementaion in the object service (optional)
+         *      osParams: {
+         *          //e.g.
+         *          workerId: 121,
+         *          assignmentId: 1234
+         *      }
+         * }
+         *
+         * @param props the properties to set. Reserved words words for osParams: answer, rating
          */
         init: function (props) {
             resetVariables();
@@ -682,65 +859,114 @@ WorkerUI = (function () {
             $(document).off("ajaxError");
             // set global ajax error handler
             $(document).ajaxError(function (event, request, settings, thrownError) {
-                if (request.status === 0) {
-                    alert("Connection error: Could not reach server at " + settings.url + ".");
-                } else {
-                    alert(request.statusText + ":\n" + JSON.stringify(request.responseJSON, null, 4));
+                switch (request.status) {
+                    case 0:
+                        alert("Connection error: Could not reach server at " + settings.url + ".");
+                        break;
+                    case 500:
+                        alert("Sorry, an internal server error occurred.");
+                        console.log(JSON.stringify(request.responseJSON, null, 4));
+                        break;
+                    default:
+                        alert(request.statusText + ":\n" + JSON.stringify(request.responseJSON, null, 4));
                 }
             });
             ractive = new DefaultView();
         },
 
-        //starts loading the first "next view"
+        /**
+         * Loads the view and makes it visible
+         */
         load: function () {
             jwt = loadAuthorization();
             if (properties.FORCE_VIEW) {
                 properties.workerServiceURL = "resources/";
             }
-            properties.preview === true ? viewPreview() : getNext();
+
+            if (properties.preview) {
+                getPreview();
+            } else if (properties.experiment === null && properties.experimentsViewEnabled) {
+                getExperiments();
+            } else {
+                getNext();
+            }
 
         },
 
+        /**
+         * Calls the passed function when data is submitted from any view.
+         *
+         * @param call the function to call. viewData, submittedData will be passed to the function.
+         */
         onSubmitAny: function (call) {
             hooks.any = call;
         },
 
+        /**
+         * Calls the passed function when data is submitted from the email view.
+         *
+         * @param call the function to call. viewData, submittedData will be passed to the function.
+         */
         onSubmitEmail: function (call) {
             hooks.email = call;
         },
 
+        /**
+         * Calls the passed function when data is submitted from the calibration view.
+         *
+         * @param call the function to call. viewData, submittedData will be passed to the function.
+         */
         onSubmitCalibration: function (call) {
             hooks.calibration = call
         },
 
         /**
+         * Calls the passed function when data is submitted from the answer view.
          *
-         * @param call the function call that gets called with arguments viewData, submittedData
+         * @param call the function to call. viewData, submittedData will be passed to the function.
          */
         onSubmitAnswer: function (call) {
             hooks.answer = call;
         },
 
+        /**
+         * Calls the passed function when data is submitted from the rating view.
+         *
+         * @param call the function to call. viewData, submittedData will be passed to the function.
+         */
         onSubmitRating: function (call) {
             hooks.rating = call;
         },
 
         /**
-         * This funtion is called when return is finished
-         * @param call
+         * This function is called when the current task is finished
+         * @param call the function to call.
          */
         onFinished: function (call) {
             hooks.finished = call;
         },
 
+        /**
+         * Calls the passed function when a worker needs to be identified.
+         * The function should be async and return a deferred.
+         * @param call
+         */
         beforeIdentifyWorker: function (call) {
             hooks.identifyWorker = call;
         },
 
+        /**
+         * Clears the worker. Causes a new authentication afterwards.
+         */
         clearWorker: function () {
             clearAuthorization();
         },
 
+
+        /**
+         * Get the current worker.
+         * @returns {*}
+         */
         getWorker: function () {
             if (jwt === NO_AUTH) {
                 return loadAuthorization();
