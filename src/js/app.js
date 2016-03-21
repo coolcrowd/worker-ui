@@ -12,6 +12,43 @@ WorkerUI = (function () {
     // disable debug mode when minified
     Ractive.DEBUG = /unminified/.test(function () {/*unminified*/
     });
+
+    // -------------- Global Vars --------------------------
+    var NO_AUTH;
+    var properties = {};
+    var jwt;
+    var skipAnswerAllowed;
+    var skipRatingAllowed;
+    var answerSkipped;
+    var ratingSkipped;
+    var preview;
+    var routes = {};
+    var BASE_ROUTES = {
+        email: "emails/",
+        calibration: "calibrations",
+        answer: "answers",
+        rating: "ratings",
+        preview: "preview/",
+        experiments: "experiments/"
+    };
+
+    function resetVariables() {
+        NO_AUTH = "no_authentication_set";
+        properties = {
+            preview: false,
+            test: false,
+            experimentsViewEnabled: false,
+            osParams: {}
+        };
+        jwt = NO_AUTH;
+        skipAnswerAllowed = true;
+        skipRatingAllowed = true;
+        answerSkipped = false;
+        ratingSkipped = false;
+        preview = false;
+        routes = {};
+    }
+
     // -------------- Requests & Helpers -------------------
     var types = loop(["email", "calibration", "answer", "rating", "finished"]);
     var EMAIL = 1;
@@ -656,27 +693,6 @@ WorkerUI = (function () {
         }
     }
 
-    var NO_AUTH = "no_authentication_set";
-    var properties = {
-        preview: false,
-        test: false,
-        osParams: {}
-    };
-    var jwt = NO_AUTH;
-    var skipAnswerAllowed = true;
-    var skipRatingAllowed = true;
-    var answerSkipped = false;
-    var ratingSkipped = false;
-    var preview = false;
-    var routes = {};
-    var BASE_ROUTES = {
-        email: "emails/",
-        calibration: "calibrations",
-        answer: "answers",
-        rating: "ratings",
-        preview: "preview/"
-    };
-
     /**
      * Makes the routes for the workerServiceURL by adding the base routes
      */
@@ -757,6 +773,7 @@ WorkerUI = (function () {
          * @param props the properties to set. Reserved words words for osParams: answer, rating
          */
         init: function (props) {
+            resetVariables();
             initProperties(props);
             makeRoutes();
             loadStyles();
