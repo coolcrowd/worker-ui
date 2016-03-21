@@ -549,7 +549,7 @@ WorkerUI = (function () {
                 } else {
                     ratedAnswer = {};
                     ratedAnswer.rating = parseInt(ratings[i]);
-                    ratedAnswer.ratingId = answersToRate[i].id;
+                    ratedAnswer.reservation = answersToRate[i].reservation;
                     ratedAnswer.experiment = experiment;
                     ratedAnswer.answerId = answersToRate[i].answerId;
                     ratedAnswer.feedback = feedbacks[i];
