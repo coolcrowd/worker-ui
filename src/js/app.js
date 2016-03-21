@@ -56,6 +56,7 @@ WorkerUI = (function () {
     var RATING = 3;
     var ANSWER = 4;
     var FINISHED = 5;
+    var EXPERIMENTS = 6;
 
     function loop(array) {
         var index = 0;
@@ -112,6 +113,43 @@ WorkerUI = (function () {
                 return ajax;
             }
         );
+    }
+
+    /**
+     * Display the preview of the task
+     */
+    function getPreview() {
+        $.getJSON(routes.preview + properties.experiment, function (preview) {
+            preview.isPreview = true;
+            viewNext(preview);
+        });
+    }
+
+    /**
+     * Display the experiments list
+     */
+    function getExperiments() {
+        var experimentsUrl;
+        if (properties.FORCE_VIEW === EXPERIMENTS) {
+            experimentsUrl = properties.workerServiceURL + "experiments.json";
+        } else {
+            experimentsUrl = routes.experiments + properties.platform;
+        }
+
+        identifyWorker().then(function () {
+            var ajax = $.ajax({
+                dataType: "json",
+                url: experimentsUrl,
+                headers: getAuthenticationHeader()
+            });
+
+            ajax.done(function (experiments) {
+                experiments.type = "EXPERIMENTS";
+                viewNext(experiments);
+            });
+
+            return ajax;
+        });
     }
 
     /**
@@ -548,7 +586,7 @@ WorkerUI = (function () {
                 } else {
                     ratedAnswer = {};
                     ratedAnswer.rating = parseInt(ratings[i]);
-                    ratedAnswer.ratingId = answersToRate[i].id;
+                    ratedAnswer.reservation = answersToRate[i].reservation;
                     ratedAnswer.experiment = experiment;
                     ratedAnswer.answerId = answersToRate[i].answerId;
                     ratedAnswer.feedback = feedbacks[i];
@@ -571,12 +609,15 @@ WorkerUI = (function () {
             this.finishCountDown(5);
             this.on("finish", function () {
                 this.fire("finished");
+                if (properties.experimentsViewEnabled) {
+                    getExperiments();
+                }
             });
 
         },
 
         //time in seconds
-        finishCountDown: function( time ) {
+        finishCountDown: function (time) {
             this.set("countDown", time);
 
             window.setTimeout(countDownTimer, 1000);
@@ -591,6 +632,47 @@ WorkerUI = (function () {
             }
         }
     });
+
+    function newExperimentsView(data) {
+        var experimentIds = [];
+        for (var i = 0; i < data.experiments.length; i++) {
+            experimentIds.push(data.experiments[i].id);
+        }
+
+        var experimentLinks = linkExperiments( experimentIds );
+        if (experimentLinks !== null && experimentLinks !== undefined && experimentIds.length === data.experiments.length) {
+            for (var i = 0; i < data.experiments.length; i++) {
+                data.experiments[i].link = experimentLinks[i];
+            }
+        }
+
+        return new ExperimentsView({
+            data: data
+        });
+    }
+
+    var ExperimentsView = DefaultView.extend({
+        template: require("../templates/experimentsview.html"),
+
+
+        oninit: function () {
+            console.log(JSON.stringify(this.get(), null, 4));
+        },
+
+        loadExperiment: function (id, link) {
+            if (link) {
+                return true;
+            } else {
+                properties.experiment = id;
+                getNext();
+                return false;
+            }
+        }
+    });
+
+    var linkExperiments = function () {
+        return null;
+    };
 
 
 //---------------- View building ------------------------
@@ -625,21 +707,13 @@ WorkerUI = (function () {
                     data: next
                 });
                 break;
+            case "EXPERIMENTS":
+                ractive = newExperimentsView(next);
+                break;
             default:
                 console.log("Unknown type: " + next["type"])
         }
         currentViewType = next["type"];
-    }
-
-
-    /**
-     * Display the preview of the task
-     */
-    function viewPreview() {
-        $.getJSON(routes.preview + properties.experiment, function (preview) {
-            preview.isPreview = true;
-            viewNext(preview);
-        })
     }
 
 
@@ -758,6 +832,8 @@ WorkerUI = (function () {
          *      experiment: 1,
          *      // optional
          *      preview: false,
+         *      // optional
+         *      experimentsViewEnabled: false,
          *      // this will force the answer view
          *      FORCE_VIEW: 3,
          *      // this will skip posts
@@ -773,7 +849,6 @@ WorkerUI = (function () {
          * @param props the properties to set. Reserved words words for osParams: answer, rating
          */
         init: function (props) {
-            resetVariables();
             initProperties(props);
             makeRoutes();
             loadStyles();
@@ -806,7 +881,14 @@ WorkerUI = (function () {
             if (properties.FORCE_VIEW) {
                 properties.workerServiceURL = "resources/";
             }
-            properties.preview === true ? viewPreview() : getNext();
+
+            if (properties.preview) {
+                getPreview();
+            } else if (properties.experiment === null && properties.experimentsViewEnabled) {
+                getExperiments();
+            } else {
+                getNext();
+            }
 
         },
 

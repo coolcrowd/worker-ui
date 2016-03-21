@@ -3,100 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>CrowdControl Platform</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
     <script id="worker_ui" src="worker_ui.js"></script>
-    <style>
-        body {
-            position: absolute;
-            margin: 0;
-            height: 100%;
-        }
-        .container {
-            position: relative;
-            padding: 0 0 0 305px;
-            width: 100%;
-            height: 100%;
-        }
-
-        #sidebar {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            width: 300px;
-            background: #eee;
-            box-shadow: -5px -2px 0 0 rgba(0, 0, 0, .1) inset;
-            z-index: 10;
-        }
-
-        #experimentList {
-            list-style-type: none;
-        }
-
-        #title {
-            text-align: center;
-            font-family: Lato, sans-serif;
-            font-size: 21px;
-            line-height: 30px;
-            font-weight: 400;
-        }
-
-        #sidebar a:link {
-            font-family: Lato, sans-serif;
-            font-weight: 400;
-            text-decoration: none;
-        }
-
-        ul#experimentList{
-            max-height:100%;
-            min-height:200px;
-            overflow:hidden;
-            overflow-y:scroll;
-        }
-
-        ul#experimentList li{
-            margin: 5px;
-        }
-
-        #properties {
-            width: 95%;
-            resize: vertical;
-        }
-
-        #worker {
-            width: 95%;
-        }
-    </style>
 </head>
 <body>
-<div class="container">
-    <div id="sidebar">
-        <br>
-        <br>
-        <div id="title">Available Experiments:</div>
-        <ul id="experimentList">
-            <li><a href="javascript://" onclick="init(1)">Experiment 1</a></li>
-        </ul>
-    </div>
     <div id="ractive-container"></div>
-</div>
 <script>
-    var working = false;
-
-    var url = "${WS_URL}";
-    var platform = "${PLATFORM}";
-    var experimentsUrl = url+"experiments/"+platform;
-
-    $.getJSON({url: experimentsUrl, success: function(result){
-        populateList(result.experiments);
-    }})
-    .error(function() { alert("Unable to fetch experiment from: "+experimentsUrl); });
-
-    var queryExperiment = getQueryString("experiment");
-
-    if (queryExperiment != null) {
-        init(queryExperiment);
-    }
 
     //from: http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
     function getQueryString(name) {
@@ -108,67 +19,23 @@
         if (!results) return null;
         if (!results[2]) return '';
         return decodeURIComponent(results[2].replace(/\+/g, " "));
-    };
-
-    function populateList(experiments) {
-        $("#experimentList").empty();
-
-        var arrayLength = experiments.length;
-        for (var i = 0; i < arrayLength; i++) {
-            var experiment = experiments[i];
-            $("#experimentList").append('<li><a href="javascript://" onclick="init('+experiment.id+')">'+experiment.name+'</a></li>');
-        }
     }
+
+    var queryExperiment = getQueryString("experiment");
+
+    init(queryExperiment);
 
     // initialize with properties
     function init(experimentID) {
-        working = true;
-        $("#sidebar").hide();
-
         var properties = {
-            workerServiceURL: url,//"${WS_URL}",
-            platform: platform,//"${PLATFORM}",
+            workerServiceURL: "http://localhost:3333",//"${WS_URL}",
+            platform: "dummydummy",//"${PLATFORM}",
             experiment: experimentID,
-
-            // optional
-            //preview: false,
-            // this will force the answer view
-            //FORCE_VIEW: 3,
-            // this will skip posts
-            NO_POST: false,
-            // these params will be passed to the crowdplatform implementaion in the object service (optional)
-            osParams: {
-                //e.g.
-                //workerId: 121,
-                //assignmentId: 1234
-            }
+            experimentsViewEnabled: true
         };
 
         // initialize settings
         WorkerUI.init(properties);
-
-        WorkerUI.onSubmitEmail(function (viewData, submittedData) {
-
-        });
-        WorkerUI.onSubmitCalibration(function (viewData, submittedData) {
-            console.log("calibration submitted" + JSON.stringify(submittedData));
-        });
-
-        WorkerUI.onSubmitAnswer(function (viewData, submittedData) {
-            console.log("viewData: \n" + JSON.stringify(viewData, null, 4));
-            console.log("submittedData: \n" + JSON.stringify(submittedData, null, 4));
-        });
-        WorkerUI.onSubmitRating(function (viewData, submittedData) {
-
-        });
-
-        WorkerUI.onSubmitAny(function (viewData, submittedData) {
-            console.log("Something was submitted");
-        });
-        WorkerUI.onFinished(function () {
-            working = false;
-            $("#sidebar").show();
-        });
 
         WorkerUI.load();
     }
