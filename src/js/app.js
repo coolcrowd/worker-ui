@@ -38,6 +38,7 @@ WorkerUI = (function () {
             preview: false,
             test: false,
             experimentsViewEnabled: false,
+            experimentsViewLogoutButtonEnabled: true,
             osParams: {}
         };
         jwt = NO_AUTH;
@@ -650,7 +651,7 @@ WorkerUI = (function () {
             }
         }
 
-        data.foo = true;
+        data.showLogoutButton = properties.experimentsViewLogoutButtonEnabled && ;
 
         return new ExperimentsView({
             data: data
@@ -677,6 +678,11 @@ WorkerUI = (function () {
 
         toggleExpanded: function(i) {
             this.toggle("experiments[" + i + "].expanded");
+        },
+
+        logout: function() {
+
+            clearAuthorization();
         }
 
 });
