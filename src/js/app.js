@@ -19,6 +19,7 @@ WorkerUI = (function () {
     var RATING = 3;
     var ANSWER = 4;
     var FINISHED = 5;
+    var EXPERIMENTS = 6;
 
     function loop(array) {
         var index = 0;
@@ -92,7 +93,7 @@ WorkerUI = (function () {
      */
     function getExperiments() {
         var experimentsUrl;
-        if (properties.FORCE_VIEW) {
+        if (properties.FORCE_VIEW === EXPERIMENTS) {
             experimentsUrl = properties.workerServiceURL + "experiments.json";
         } else {
             experimentsUrl = routes.experiments + properties.platform;
