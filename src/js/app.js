@@ -849,6 +849,7 @@ WorkerUI = (function () {
          * @param props the properties to set. Reserved words words for osParams: answer, rating
          */
         init: function (props) {
+            resetVariables();
             initProperties(props);
             makeRoutes();
             loadStyles();
