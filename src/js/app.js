@@ -647,20 +647,13 @@ WorkerUI = (function () {
     });
 
     function newExperimentsView(data) {
-        var experimentIds = [];
-        for (var i = 0; i < data.experiments.length; i++) {
-            // create array with experiment ids
-            experimentIds.push(data.experiments[i].id);
+        var experiments = $.when(listExperiments(data.experiments)).done(function(experiments) {
+            ractive.set("experiments", experiments);
+        });
 
+        for (var i = 0; i < data.experiments.length; i++) {
             // initialize dropdown
             data.experiments[i].expanded = false;
-        }
-
-        var experimentLinks = linkExperiments( experimentIds );
-        if (experimentLinks !== null && experimentLinks !== undefined && experimentIds.length === data.experiments.length) {
-            for (var i = 0; i < data.experiments.length; i++) {
-                data.experiments[i].link = experimentLinks[i];
-            }
         }
 
         data.showLogoutButton = properties.experimentsViewLogoutButtonEnabled && getWorker() !== NO_AUTH;
@@ -688,19 +681,19 @@ WorkerUI = (function () {
             }
         },
 
-        toggleExpanded: function(i) {
+        toggleExpanded: function (i) {
             this.toggle("experiments[" + i + "].expanded");
         },
 
-        logout: function() {
+        logout: function () {
             this.set("showLogoutButton", false);
             clearAuthorization();
         }
 
-});
+    });
 
-    var linkExperiments = function () {
-        return null;
+    var listExperiments = function (experiments) {
+        return experiments;
     };
 
 
@@ -832,11 +825,12 @@ WorkerUI = (function () {
     function loadStyles() {
         var $worker_ui = $('#worker_ui');
         if ($worker_ui.length > 0) {
+            var head = $('head');
+
             var pathname = $worker_ui.attr("src");
             var index = pathname.lastIndexOf("/") + 1;
             var stylePath = pathname.slice(0, index) + "screen.css";
 
-            var head = $('head');
             head.append('<link rel="stylesheet" href="' + stylePath + '" type="text/css" />');
             head.append('<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">');
         } else {
@@ -976,7 +970,7 @@ WorkerUI = (function () {
         },
 
         /**
-         * Calls the passed function when a worker needs to be identified.
+         * The passed function is called when a worker needs to be identified.
          * The function should be async and return a deferred.
          * @param call
          */
@@ -985,12 +979,20 @@ WorkerUI = (function () {
         },
 
         /**
+         * The passed function will be called before the experiments list is displayed.
+         *
+         * @param call(experiments: [{id, title, description, link, content}])
+         */
+        beforeListExperiments: function(call) {
+            listExperiments = call;
+        },
+
+        /**
          * Clears the worker. Causes a new authentication afterwards.
          */
         clearWorker: function () {
             clearAuthorization();
         },
-
 
 
         getWorker: getWorker,

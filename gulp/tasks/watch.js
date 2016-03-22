@@ -2,7 +2,8 @@ var gulp = require('gulp');
 var config = require('../config');
 
 gulp.task('watch', ['watchify'], function () {
-    gulp.watch("./src/index.html", ['markup']);
+    gulp.watch("./src/{index.html,debug.html}", ['markup']);
+    gulp.watch("./src/platform/*", ['markup']);
     gulp.watch(config.js.src, ['browserify']);
     gulp.watch(config.templates.src, ['browserify']);
     gulp.watch(config.sass.src, ['sass']);
