@@ -633,15 +633,14 @@ WorkerUI = (function () {
         finishCountDown: function (time) {
             this.set("countDown", time);
 
-            window.setTimeout(countDownTimer, 1000);
             function countDownTimer() {
+                window.setTimeout(countDownTimer, 1000);
                 var countDown = ractive.get("countDown");
+                countDown -= 1;
                 if (countDown === 0) {
                     ractive.fire("finish");
-                } else {
-                    ractive.subtract("countDown");
-                    window.setTimeout(countDownTimer, 1000);
                 }
+                ractive.set("countDown", countDown);
             }
         }
     });
