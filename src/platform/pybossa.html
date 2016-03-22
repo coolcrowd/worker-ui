@@ -15,6 +15,8 @@
 
 <script id="worker_ui" src="/worker_ui.js"></script>
 <script>
+    var projectName = "ccw";
+
     function doIdTask(idTasks) {
         var idTask = idTasks[0];
         var authHash = WorkerUI.generateAuthHash();
@@ -42,6 +44,36 @@
         }
     }
 
+    function mapExperimentsToTasks(task, experiments) {
+        var filterIdTasks = function (tasks) {
+            var experimentTasks = [];
+            $.each(tasks, function (index, element) {
+                if (element.info.type === "experiment") {
+                    experimentTasks.push(element);
+                }
+            });
+            return experimentTasks;
+        };
+
+        return $.ajax({
+                    url: "/api/task",
+                    data: {project_id: task.project_id},
+                    dataType: 'json'
+                })
+                .done(filterIdTasks)
+                .then(function (tasks) {
+                    var j = 0;
+                    for (var i = 0; i < tasks.length; i++) {
+                        if ((j < experiments.length) && (tasks[i].info.expID === experiments[j].id)) {
+                            experiments[j].link = "/project/" + projectName + "/task/" + tasks[i].id;
+                            experiments[j].content = "Base Payment: 0." + tasks[i].info.paymentBase + " USD";
+                            j++;
+                        }
+                    }
+                    return experiments;
+                });
+    }
+
     pybossa.taskLoaded(function (task, deferred) {
         if (!$.isEmptyObject(task)) {
             deferred.resolve(task);
@@ -49,37 +81,47 @@
     });
 
     pybossa.presentTask(function (task, deferred) {
-        if (!$.isEmptyObject(task) && (task.info.type === "experiment")) {
-            $("#payment").children("p").text(
-                    "Base Payment: 0." + task.info.paymentBase + " USD"
-            );
-
-            WorkerUI.init(properties = {
-                workerServiceURL: task.info.url,
-                platform: task.info.platform,
-                experiment: task.info.expID,
-                preview: false,
-                test: false
-            });
-
-            WorkerUI.onFinished(function (viewData, submittedData) {
-                pybossa.saveTask(task.id, viewData).done(function () {
-                    deferred.resolve(task);
+        if (!$.isEmptyObject(task)) {
+            if (task.info.type === "experiment") {
+                WorkerUI.init(properties = {
+                    workerServiceURL: task.info.url,
+                    platform: task.info.platform,
+                    experiment: task.info.expID
                 });
-            });
 
-            WorkerUI.beforeIdentifyWorker(function () {
-                return doIdTask(task.info.idTasks);
-            });
+                WorkerUI.onFinished(function (viewData, submittedData) {
+                    pybossa.saveTask(task.id, viewData).done(function () {
+                        deferred.resolve(task);
+                    });
+                });
+
+                WorkerUI.beforeIdentifyWorker(function () {
+                    return doIdTask(task.info.idTasks);
+                });
+
+            } else if (task.info.type === "idTask") {
+                WorkerUI.init(properties = {
+                    workerServiceURL: task.info.url,
+                    platform: task.info.platform,
+                    experiment: null,
+                    experimentsViewEnabled: true
+                });
+
+                WorkerUI.beforeIdentifyWorker(function () {
+                    return doIdTask([task.id]);
+                });
+
+                WorkerUI.beforeListExperiments(function (experiments) {
+                    return mapExperimentsToTasks(task, experiments)
+                });
+            }
 
             WorkerUI.load();
-        } else {
-            $("#payment").hide();
-            $("#id-task").show();
         }
-    });
+    })
+    ;
 
-    pybossa.run('ccw');
+    pybossa.run(projectName);
 
 
 </script>

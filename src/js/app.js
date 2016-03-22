@@ -646,7 +646,9 @@ WorkerUI = (function () {
     });
 
     function newExperimentsView(data) {
-        var experiments = listExperiments(data.experiments);
+        var experiments = $.when(listExperiments(data.experiments)).done(function(experiments) {
+            ractive.set("experiments", experiments);
+        });
 
         for (var i = 0; i < data.experiments.length; i++) {
             // initialize dropdown
@@ -822,11 +824,12 @@ WorkerUI = (function () {
     function loadStyles() {
         var $worker_ui = $('#worker_ui');
         if ($worker_ui.length > 0) {
+            var head = $('head');
+
             var pathname = $worker_ui.attr("src");
             var index = pathname.lastIndexOf("/") + 1;
             var stylePath = pathname.slice(0, index) + "screen.css";
 
-            var head = $('head');
             head.append('<link rel="stylesheet" href="' + stylePath + '" type="text/css" />');
             head.append('<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">');
         } else {
