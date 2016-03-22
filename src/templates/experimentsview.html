@@ -27,9 +27,10 @@
                     </button>
                 </div>
                 {{#if .expanded}}
-                <p class="info experiment-list-description">
+                <p class="info">
                     {{description}}
                 </p>
+                <div>{{{content}}}</div>
                 {{/if}}
             </li>
             {{/each}}
